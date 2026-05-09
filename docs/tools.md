@@ -46,6 +46,8 @@ Colima is a lightweight local container runtime for macOS. Use it when Docker De
 
 `kubectl apply -k <path>` uses Kustomize. The `kustomization.yaml` file in that path is not a Kubernetes workload; it is the build instruction file that assembles Kubernetes YAML before apply.
 
+Daily command guide: `docs/kubectl-daily-commands.md`.
+
 ### k3d
 
 `k3d` runs a small Kubernetes cluster inside Docker. It gives the lab a local cluster without cloud cost.
@@ -89,6 +91,8 @@ Kyverno is the policy engine. The CLI can test policies locally before they run 
 - Used by: policy validation and future policy tests
 - Installer: `installer/kyverno.installer.sh`
 - Check: `kyverno version`
+
+Why Kyverno: policies are Kubernetes-style YAML, can audit/enforce multi-tenant guardrails, and can support supply-chain checks such as image signature verification.
 
 ### jq
 

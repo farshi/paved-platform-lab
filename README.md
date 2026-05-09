@@ -44,6 +44,10 @@ Optional:
 
 Simple descriptions: `docs/tools.md`
 
+Daily kubectl practice guide: `docs/kubectl-daily-commands.md`
+
+Hard demo questions and answers: `docs/demo-hard-questions.md`
+
 ## Repo Map
 
 - `templates/service` - service scaffold for new teams

@@ -2,6 +2,12 @@
 
 Guardrails for the lab.
 
+## Why Use Kyverno?
+
+- No separate DSL required: Kyverno policies are Kubernetes resources written as YAML, so teams can review them with the same workflow they use for manifests. This is easier to introduce than asking every team to learn OPA/Rego first.
+- Production-oriented guardrails: Kyverno can validate, mutate, generate, audit, and enforce policy in multi-tenant clusters. In this lab, it blocks unsafe workloads at admission time and gives clear policy names in `make evidence`.
+- Security: Kyverno supports supply-chain and runtime guardrails, including image signature verification and security best-practice enforcement. This lab starts with approved registries, required CPU/memory requests and limits, and non-root containers.
+
 ## Policy Goals
 
 - require CPU and memory requests
@@ -16,4 +22,3 @@ Guardrails for the lab.
 2. deploy valid manifest
 3. try invalid manifest
 4. show reject event and fix
-
