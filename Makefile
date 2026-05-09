@@ -1,0 +1,74 @@
+SHELL := /bin/sh
+
+CLUSTER_NAME ?= guardrails-lab
+K3D_ARGS ?= --agents 1 --servers 1 --wait
+NAMESPACE_A ?= tenant-a
+NAMESPACE_B ?= tenant-b
+IMAGE_REPO ?= ghcr.io/rfar/platform-guardrails-lab/demo-api
+IMAGE_TAG ?= 0.1.0
+
+.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability validate deploy break rollback observability
+
+help:
+	@echo "Targets:"
+	@echo "  make install        Install/check local lab tools"
+	@echo "  make bootstrap      Create local k3d cluster"
+	@echo "  make reset          Delete local k3d cluster"
+	@echo "  make build          Build and import the demo API image"
+	@echo "  make scaffold       Show service template path"
+	@echo "  make install-kyverno Install Kyverno and baseline policies"
+	@echo "  make install-observability Install Prometheus, Grafana, and OTel collector"
+	@echo "  make validate       Validate manifests and policies"
+	@echo "  make deploy         Deploy good version"
+	@echo "  make break          Apply bad change"
+	@echo "  make rollback       Roll back the workload"
+	@echo "  make observability  Install or inspect observability stack"
+
+install:
+	sh installer/all.installer.sh
+
+bootstrap:
+	k3d cluster create $(CLUSTER_NAME) $(K3D_ARGS)
+	kubectl create namespace $(NAMESPACE_A) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl create namespace $(NAMESPACE_B) --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -f observability/namespace.yaml
+
+reset:
+	k3d cluster delete $(CLUSTER_NAME)
+
+build:
+	docker build -t $(IMAGE_REPO):$(IMAGE_TAG) services/demo-api
+	k3d image import $(IMAGE_REPO):$(IMAGE_TAG) -c $(CLUSTER_NAME)
+
+scaffold:
+	@echo "Use templates/service as the source for new team services."
+	@echo "See README.md and labs/01-setup for the scaffold flow."
+
+install-kyverno:
+	helm repo add kyverno https://kyverno.github.io/kyverno/
+	helm repo update
+	helm upgrade --install kyverno kyverno/kyverno -n kyverno --create-namespace --wait
+	kubectl apply -k policies/kyverno
+
+install-observability:
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo update
+	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n observability --create-namespace -f observability/kube-prometheus-stack-values.yaml --wait
+	kubectl apply -k observability
+
+validate:
+	kubectl apply -k examples/tenant-a --dry-run=server
+	kubectl apply -k examples/tenant-b --dry-run=server
+	@if kubectl apply -k examples/bad --dry-run=server >/dev/null 2>&1; then echo "bad manifest unexpectedly passed"; exit 1; else echo "bad manifest rejected as expected"; fi
+
+deploy:
+	kubectl apply -k examples/tenant-a
+
+break:
+	kubectl apply -k examples/bad
+
+rollback:
+	kubectl rollout undo deployment/demo-api -n tenant-a
+
+observability:
+	@echo "Use make install-observability after bootstrap."
