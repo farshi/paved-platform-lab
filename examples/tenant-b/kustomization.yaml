@@ -1,0 +1,17 @@
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - resourcequota.yaml
+  - limitrange.yaml
+  - ../../services/demo-api/manifests/base
+
+commonLabels:
+  tenant: tenant-b
+
+images:
+  - name: ghcr.io/rfar/platform-guardrails-lab/demo-api
+    newTag: 0.1.0
+
+patches:
+  - path: patch-env.yaml
+

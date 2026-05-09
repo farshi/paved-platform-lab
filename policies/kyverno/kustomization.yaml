@@ -1,0 +1,5 @@
+resources:
+  - clusterpolicy-require-resources.yaml
+  - clusterpolicy-nonroot.yaml
+  - clusterpolicy-approved-registry.yaml
+

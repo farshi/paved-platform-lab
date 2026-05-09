@@ -1,0 +1,29 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-container-resources
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-cpu-and-memory-requests-and-limits
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+                - DaemonSet
+      validate:
+        message: CPU and memory requests and limits are required for every container.
+        foreach:
+          - list: "request.object.spec.template.spec.containers[]"
+            pattern:
+              resources:
+                requests:
+                  cpu: "?*"
+                  memory: "?*"
+                limits:
+                  cpu: "?*"
+                  memory: "?*"
+

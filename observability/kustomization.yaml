@@ -1,0 +1,8 @@
+namespace: observability
+resources:
+  - namespace.yaml
+  - otel-collector.yaml
+  - prometheus-rule.yaml
+  - grafana-dashboard-demo-api.yaml
+  - service-monitor-demo-api-a.yaml
+  - service-monitor-demo-api-b.yaml

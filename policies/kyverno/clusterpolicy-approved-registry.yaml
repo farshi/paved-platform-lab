@@ -1,0 +1,23 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: approved-image-registry
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: only-allow-lab-registry-images
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+                - DaemonSet
+      validate:
+        message: Images must come from ghcr.io/rfar/platform-guardrails-lab.
+        foreach:
+          - list: "request.object.spec.template.spec.containers[]"
+            pattern:
+              image: "ghcr.io/rfar/platform-guardrails-lab/*"
+

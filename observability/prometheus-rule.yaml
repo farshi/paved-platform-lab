@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-api-slo
+  namespace: observability
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: demo-api.slo
+      rules:
+        - alert: DemoApiHighErrorRate
+          expr: |
+            (
+              sum(rate(http_requests_total{service="demo-api",status=~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total{service="demo-api"}[5m]))
+            ) > 0.01
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Demo API error rate is above 1 percent.
+            description: The sample API is exceeding its simple error budget example.
+

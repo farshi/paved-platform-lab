@@ -1,0 +1,28 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-nonroot-containers
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-nonroot-and-no-privilege-escalation
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+                - DaemonSet
+      validate:
+        message: Containers must run as non-root and must not allow privilege escalation.
+        foreach:
+          - list: "request.object.spec.template.spec.containers[]"
+            pattern:
+              securityContext:
+                allowPrivilegeEscalation: false
+          - list: "request.object.spec.template.spec.containers[]"
+            pattern:
+              securityContext:
+                runAsNonRoot: true
+

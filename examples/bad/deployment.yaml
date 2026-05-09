@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-api-bad
+  namespace: tenant-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-api-bad
+  template:
+    metadata:
+      labels:
+        app: demo-api-bad
+    spec:
+      containers:
+        - name: demo-api-bad
+          image: docker.io/library/nginx:latest
+          ports:
+            - containerPort: 80
+
