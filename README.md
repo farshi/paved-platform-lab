@@ -42,6 +42,8 @@ Optional:
 - `jq`
 - `yq`
 
+Simple descriptions: `docs/tools.md`
+
 ## Repo Map
 
 - `templates/service` - service scaffold for new teams
