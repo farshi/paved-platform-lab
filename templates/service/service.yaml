@@ -4,6 +4,7 @@ metadata:
   name: __SERVICE_NAME__
   labels:
     app.kubernetes.io/name: __SERVICE_NAME__
+    app.kubernetes.io/component: api
 spec:
   selector:
     app.kubernetes.io/name: __SERVICE_NAME__
@@ -11,4 +12,3 @@ spec:
     - name: http
       port: 80
       targetPort: http
-

@@ -79,11 +79,11 @@ Done when: one command or short command sequence produces demo-ready proof.
 
 Goal: each lab stays runnable in minutes.
 
-- [ ] Update `labs/01-setup` with exact expected commands and expected checks.
-- [ ] Update `labs/02-policy` with pass/fail policy examples.
-- [ ] Update `labs/03-rollback` with exact failure and recovery checks.
-- [ ] Keep copy short and operational.
-- [ ] Cross-link labs from `README.md`.
+- [x] Update `labs/01-setup` with exact expected commands and expected checks.
+- [x] Update `labs/02-policy` with pass/fail policy examples.
+- [x] Update `labs/03-rollback` with exact failure and recovery checks.
+- [x] Keep copy short and operational.
+- [x] Cross-link labs from `README.md`.
 
 Done when: a reader can follow labs without knowing the repo internals.
 

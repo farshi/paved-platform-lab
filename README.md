@@ -90,6 +90,6 @@ Hard demo questions and answers: `docs/demo-hard-questions.md`
 
 Run the lab in this order:
 
-- `labs/01-setup`
-- `labs/02-policy`
-- `labs/03-rollback`
+- `labs/01-setup` - create local cluster, namespaces, and image
+- `labs/02-policy` - install Kyverno and prove pass/fail admission behavior
+- `labs/03-rollback` - deploy, check health, block bad change, roll back, and collect evidence

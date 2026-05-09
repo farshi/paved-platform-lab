@@ -7,8 +7,10 @@ resources:
 
 namespace: tenant-b
 
-commonLabels:
-  tenant: tenant-b
+labels:
+  - pairs:
+      tenant: tenant-b
+    includeSelectors: true
 
 images:
   - name: ghcr.io/rfar/platform-guardrails-lab/demo-api
