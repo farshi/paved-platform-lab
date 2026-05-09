@@ -91,12 +91,12 @@ Done when: a reader can follow labs without knowing the repo internals.
 
 Goal: guardrails match the self-service story.
 
-- [ ] Confirm required CPU and memory requests policy blocks bad manifests.
-- [ ] Confirm non-root policy blocks bad manifests.
-- [ ] Confirm approved registry policy blocks bad manifests.
-- [ ] Confirm resource limit expectations are covered.
-- [ ] Confirm namespace tenancy rules are covered or explicitly deferred.
-- [ ] Add pass/fail examples for every policy.
+- [x] Confirm required CPU and memory requests policy blocks bad manifests.
+- [x] Confirm non-root policy blocks bad manifests.
+- [x] Confirm approved registry policy blocks bad manifests.
+- [x] Confirm resource limit expectations are covered.
+- [x] Confirm namespace tenancy rules are covered or explicitly deferred.
+- [x] Add pass/fail examples for every policy.
 
 Done when: policy behavior is visible before deploy and in-cluster.
 

@@ -7,7 +7,7 @@ NAMESPACE_B ?= tenant-b
 IMAGE_REPO ?= ghcr.io/rfar/platform-guardrails-lab/demo-api
 IMAGE_TAG ?= 0.1.0
 
-.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability validate deploy break rollback check-app evidence observability
+.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability validate validate-policies deploy break rollback check-app evidence observability
 
 help:
 	@echo "Targets:"
@@ -19,6 +19,7 @@ help:
 	@echo "  make install-kyverno Install Kyverno and baseline policies"
 	@echo "  make install-observability Install Prometheus, Grafana, and OTel collector"
 	@echo "  make validate       Validate manifests and policies"
+	@echo "  make validate-policies Validate focused policy pass/fail examples"
 	@echo "  make deploy         Deploy good version"
 	@echo "  make break          Apply bad change"
 	@echo "  make rollback       Roll back the workload"
@@ -62,6 +63,9 @@ validate:
 	kubectl apply -k examples/tenant-a --dry-run=server
 	kubectl apply -k examples/tenant-b --dry-run=server
 	@if kubectl apply -k examples/bad --dry-run=server >/dev/null 2>&1; then echo "bad manifest unexpectedly passed"; exit 1; else echo "bad manifest rejected as expected"; fi
+
+validate-policies:
+	@sh scripts/validate-policy-examples.sh
 
 deploy:
 	kubectl apply -k examples/tenant-a

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: policy-fail-missing-resources
+  namespace: tenant-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: policy-fail-missing-resources
+  template:
+    metadata:
+      labels:
+        app: policy-fail-missing-resources
+    spec:
+      containers:
+        - name: policy-fail-missing-resources
+          image: ghcr.io/rfar/platform-guardrails-lab/demo-api:0.1.0
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 10001
+            capabilities:
+              drop:
+                - ALL
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault

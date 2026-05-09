@@ -80,6 +80,7 @@ Hard demo questions and answers: `docs/demo-hard-questions.md`
 - `make install-kyverno`
 - `make deploy`
 - `make validate`
+- `make validate-policies`
 - `make break`
 - `make rollback`
 - `make check-app`

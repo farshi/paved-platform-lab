@@ -22,3 +22,20 @@ Guardrails for the lab.
 2. deploy valid manifest
 3. try invalid manifest
 4. show reject event and fix
+
+## Focused Policy Checks
+
+Run:
+
+```sh
+make validate-policies
+```
+
+Examples:
+
+- `examples/policy/pass`: accepted by all policies
+- `examples/policy/fail-approved-registry`: rejected by `approved-image-registry`
+- `examples/policy/fail-missing-resources`: rejected by `require-container-resources`
+- `examples/policy/fail-nonroot`: rejected by `require-nonroot-containers`
+
+Tenancy policy note: tenant boundaries are currently covered through namespaces, namespace-scoped RBAC, `ResourceQuota`, `LimitRange`, and tenant overlays. A dedicated Kyverno tenancy policy is deferred.
