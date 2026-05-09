@@ -24,6 +24,9 @@ Keep one teaching spine:
 - Setup, policy, and rollback labs exist.
 - Make targets exist for `bootstrap`, `reset`, `build`, `scaffold`, `install-kyverno`, `install-observability`, `validate`, `deploy`, `break`, `rollback`, and `observability`.
 - Observability scaffold exists with collector, ServiceMonitors, PrometheusRule, Grafana dashboard, and SLO notes.
+- Self-service demo story exists in `docs/self-service-demo.md`.
+- Core local run was proved on 2026-05-09: bootstrap, build, Kyverno install, validate, deploy, blocked bad manifest, and rollback.
+- Evidence output exists through `make evidence`.
 - Gateway stays phase 2 unless ingress becomes insufficient.
 - GCP stays out of MVP.
 
@@ -33,13 +36,13 @@ Keep one teaching spine:
 
 Goal: document the simple story a user can follow to learn self-service platform engineering.
 
-- [ ] Create one step-by-step demo demo doc.
-- [ ] Explain how a team goes from service code to safe deployment.
-- [ ] Show where guardrails protect the platform.
-- [ ] Show where telemetry proves user impact.
-- [ ] Define the tiny Java + SQLite + telemetry service.
-- [ ] Define the small watcher that detects fast SLO burn and triggers rollback.
-- [ ] Keep the path simple enough to explain in five minutes.
+- [x] Create one step-by-step demo demo doc.
+- [x] Explain how a team goes from service code to safe deployment.
+- [x] Show where guardrails protect the platform.
+- [x] Show where telemetry proves user impact.
+- [x] Define the tiny Java + SQLite + telemetry service.
+- [x] Define the small watcher that detects fast SLO burn and triggers rollback.
+- [x] Keep the path simple enough to explain in five minutes.
 
 Done when: the repo has one readable story for an demo and for a team learning the platform.
 
@@ -47,15 +50,15 @@ Done when: the repo has one readable story for an demo and for a team learning t
 
 Goal: make the local demo runnable end to end.
 
-- [ ] Run `make install` if required tools are missing.
-- [ ] Run `make bootstrap`.
-- [ ] Run `make build`.
-- [ ] Run `make install-kyverno`.
-- [ ] Run `make validate`.
-- [ ] Run `make deploy`.
-- [ ] Run `make break`.
-- [ ] Run `make rollback`.
-- [ ] Fix any command drift between Makefile, manifests, and lab docs.
+- [x] Run `make install` if required tools are missing.
+- [x] Run `make bootstrap`.
+- [x] Run `make build`.
+- [x] Run `make install-kyverno`.
+- [x] Run `make validate`.
+- [x] Run `make deploy`.
+- [x] Run `make break`.
+- [x] Run `make rollback`.
+- [x] Fix any command drift between Makefile, manifests, and lab docs.
 
 Done when: fresh local run completes bootstrap -> policy -> deploy -> blocked manifest -> rollback.
 
@@ -63,12 +66,12 @@ Done when: fresh local run completes bootstrap -> policy -> deploy -> blocked ma
 
 Goal: make the demo easy to inspect and explain.
 
-- [ ] Add compact evidence output for demo runs.
-- [ ] Show policy blocks.
-- [ ] Show rollout events.
-- [ ] Show current deployment image and revision.
-- [ ] Add a short audit view for what changed and why.
-- [ ] Document one before/after rollback example.
+- [x] Add compact evidence output for demo runs.
+- [x] Show policy blocks.
+- [x] Show rollout events.
+- [x] Show current deployment image and revision.
+- [x] Add a short audit view for what changed and why.
+- [x] Document one before/after rollback example.
 
 Done when: one command or short command sequence produces demo-ready proof.
 

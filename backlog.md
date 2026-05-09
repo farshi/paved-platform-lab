@@ -91,9 +91,9 @@ Installer scripts live under `installer/*.installer.sh`.
 
 ### 9. Evidence And Audit
 
-- [ ] Add compact evidence output for demo runs
-- [ ] Add a summary of policy blocks and rollout events
-- [ ] Add a short audit view for what changed and why
+- [x] Add compact evidence output for demo runs
+- [x] Add a summary of policy blocks and rollout events
+- [x] Add a short audit view for what changed and why
 - [ ] Decide if PatchPilot ships in MVP or stays phase 2
 
 ### 10. Observability
@@ -144,13 +144,13 @@ Installer scripts live under `installer/*.installer.sh`.
 
 ### 15. Demo Self-Service Demo
 
-- [ ] Add one step-by-step doc that explains the self-service platform story
-- [ ] Show a team moving from service code to container image to Kubernetes deployment
-- [ ] Show guardrails blocking unsafe manifests before deploy
-- [ ] Show telemetry making runtime health visible
-- [ ] Show SLO burn from a deliberately bad version
-- [ ] Show a simple watcher detecting the bad version and rolling back
-- [ ] Keep the full story simple enough to explain in an demo
+- [x] Add one step-by-step doc that explains the self-service platform story
+- [x] Show a team moving from service code to container image to Kubernetes deployment
+- [x] Show guardrails blocking unsafe manifests before deploy
+- [x] Show telemetry making runtime health visible
+- [x] Show SLO burn from a deliberately bad version
+- [x] Show a simple watcher detecting the bad version and rolling back
+- [x] Keep the full story simple enough to explain in an demo
 
 ### 16. Tiny Java Telemetry Service
 

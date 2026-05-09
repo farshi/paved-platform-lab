@@ -78,6 +78,8 @@ Simple descriptions: `docs/tools.md`
 - `make validate`
 - `make break`
 - `make rollback`
+- `make check-app`
+- `make evidence`
 - `make install-observability`
 
 ## Next Step

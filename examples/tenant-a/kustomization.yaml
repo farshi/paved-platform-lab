@@ -5,6 +5,8 @@ resources:
   - limitrange.yaml
   - ../../services/demo-api/manifests/base
 
+namespace: tenant-a
+
 commonLabels:
   tenant: tenant-a
 
@@ -14,4 +16,3 @@ images:
 
 patches:
   - path: patch-env.yaml
-

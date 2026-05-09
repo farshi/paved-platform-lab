@@ -7,7 +7,7 @@ NAMESPACE_B ?= tenant-b
 IMAGE_REPO ?= ghcr.io/rfar/platform-guardrails-lab/demo-api
 IMAGE_TAG ?= 0.1.0
 
-.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability validate deploy break rollback observability
+.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability validate deploy break rollback check-app evidence observability
 
 help:
 	@echo "Targets:"
@@ -22,6 +22,8 @@ help:
 	@echo "  make deploy         Deploy good version"
 	@echo "  make break          Apply bad change"
 	@echo "  make rollback       Roll back the workload"
+	@echo "  make check-app      Check demo API health from inside the cluster"
+	@echo "  make evidence       Print compact demo evidence"
 	@echo "  make observability  Install or inspect observability stack"
 
 install:
@@ -69,6 +71,16 @@ break:
 
 rollback:
 	kubectl rollout undo deployment/demo-api -n tenant-a
+
+check-app:
+	kubectl delete pod demo-api-check -n tenant-a --ignore-not-found
+	kubectl apply -f scripts/check-app-pod.yaml
+	kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/demo-api-check -n tenant-a --timeout=60s
+	kubectl logs pod/demo-api-check -n tenant-a
+	kubectl delete pod demo-api-check -n tenant-a --ignore-not-found
+
+evidence:
+	@sh scripts/evidence.sh
 
 observability:
 	@echo "Use make install-observability after bootstrap."

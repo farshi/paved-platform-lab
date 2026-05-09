@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo-api-check
+  namespace: tenant-a
+spec:
+  restartPolicy: Never
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      command:
+        - curl
+        - -fsS
+        - -w
+        - "\nhttp_status=%{http_code}\n"
+        - http://demo-api.tenant-a.svc.cluster.local/healthz
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        runAsUser: 10001
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          cpu: 50m
+          memory: 32Mi
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault

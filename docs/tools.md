@@ -44,6 +44,8 @@ Colima is a lightweight local container runtime for macOS. Use it when Docker De
 - Installer: `installer/kubectl.installer.sh`
 - Check: `kubectl version --client`
 
+`kubectl apply -k <path>` uses Kustomize. The `kustomization.yaml` file in that path is not a Kubernetes workload; it is the build instruction file that assembles Kubernetes YAML before apply.
+
 ### k3d
 
 `k3d` runs a small Kubernetes cluster inside Docker. It gives the lab a local cluster without cloud cost.
@@ -51,6 +53,8 @@ Colima is a lightweight local container runtime for macOS. Use it when Docker De
 - Used by: `make bootstrap`, `make reset`, `make build`
 - Installer: `installer/k3d.installer.sh`
 - Check: `k3d version`
+
+This lab uses one k3s server container, one k3s agent container, and k3d's `serverlb` load balancer container. `serverlb` is created by k3d as a local entrypoint/proxy in front of the server node; it is not a pod or a Kubernetes workload.
 
 ### Helm
 

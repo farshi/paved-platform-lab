@@ -11,3 +11,4 @@ Working tenant example.
 - resource requests and limits
 - policy-compliant manifest set
 
+See `examples/README.md` for the purpose of each YAML file.
