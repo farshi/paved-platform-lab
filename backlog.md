@@ -142,6 +142,34 @@ Installer scripts live under `installer/*.installer.sh`.
 - [ ] Teach variable governance: low-risk paths self-service, high-risk paths stronger controls
 - [ ] Add adoption checks: can a team use the guide without platform-team hand-holding?
 
+### 15. Demo Self-Service Demo
+
+- [ ] Add one step-by-step doc that explains the self-service platform story
+- [ ] Show a team moving from service code to container image to Kubernetes deployment
+- [ ] Show guardrails blocking unsafe manifests before deploy
+- [ ] Show telemetry making runtime health visible
+- [ ] Show SLO burn from a deliberately bad version
+- [ ] Show a simple watcher detecting the bad version and rolling back
+- [ ] Keep the full story simple enough to explain in an demo
+
+### 16. Tiny Java Telemetry Service
+
+- [ ] Add a minimal Java service for the runtime demo
+- [ ] Use SQLite for one simple persistent action
+- [ ] Add health, success, slow, and failing endpoints
+- [ ] Emit request count, latency, and error metrics
+- [ ] Add minimal OpenTelemetry wiring
+- [ ] Add a good deployment and one bad deployment
+- [ ] Use the bad deployment to burn SLO budget quickly
+
+### 17. Rollback Watcher
+
+- [ ] Add a small watcher script after deploy
+- [ ] Watch app health, rollout state, and simple metrics
+- [ ] Print clear plain-language diagnosis
+- [ ] Trigger `kubectl rollout undo` for the demo service when the burn is obvious
+- [ ] Keep the watcher small enough for teams to read
+
 ## Suggested Build Order
 
 1. Bootstrap the k3d cluster.
@@ -154,6 +182,7 @@ Installer scripts live under `installer/*.installer.sh`.
 8. Add observability and SLO examples after the core path works.
 9. Add learning tracks after the runnable lab has enough proof to teach from.
 10. Add CI/CD basics and platform mentoring docs as team-enablement material.
+11. Add the tiny Java telemetry service and rollback watcher as the demo-grade runtime demo.
 
 ## Not In MVP
 

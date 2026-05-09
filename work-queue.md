@@ -29,6 +29,20 @@ Keep one teaching spine:
 
 ## Next Work
 
+### Q0 - Self-Service Demo Story
+
+Goal: document the simple story a user can follow to learn self-service platform engineering.
+
+- [ ] Create one step-by-step demo demo doc.
+- [ ] Explain how a team goes from service code to safe deployment.
+- [ ] Show where guardrails protect the platform.
+- [ ] Show where telemetry proves user impact.
+- [ ] Define the tiny Java + SQLite + telemetry service.
+- [ ] Define the small watcher that detects fast SLO burn and triggers rollback.
+- [ ] Keep the path simple enough to explain in five minutes.
+
+Done when: the repo has one readable story for an demo and for a team learning the platform.
+
 ### Q1 - Prove Core Lab Runs
 
 Goal: make the local demo runnable end to end.
@@ -119,6 +133,32 @@ Goal: turn the platform lab into mentoring material for teams.
 - [ ] Keep every lesson practical: concept -> example -> best practice -> lab link.
 
 Done when: a team can use the docs to learn the platform path without platform-team hand-holding.
+
+### Q8 - Tiny Java Telemetry Service
+
+Goal: add one small realistic service for SLO and rollback lessons.
+
+- [ ] Add a minimal Java service.
+- [ ] Use SQLite for one simple stateful operation.
+- [ ] Expose health, success, slow, and failing paths.
+- [ ] Emit request count, latency, and error metrics.
+- [ ] Keep OpenTelemetry wiring minimal.
+- [ ] Add manifests that deploy the good version.
+- [ ] Add one bad version that burns error or latency budget quickly.
+
+Done when: the lab can create visible SLO burn from a tiny service.
+
+### Q9 - Simple Rollback Watcher
+
+Goal: show automated detection and rollback without building a big platform.
+
+- [ ] Add a small watcher script.
+- [ ] Watch app health, rollout state, and simple metrics.
+- [ ] Print what is wrong in plain language.
+- [ ] Trigger `kubectl rollout undo` when the demo service is unhealthy.
+- [ ] Keep manual override obvious.
+
+Done when: the watcher detects the broken deploy and rolls back cleanly.
 
 ## Deferred
 
