@@ -166,13 +166,14 @@ Done when: the watcher detects the broken deploy and rolls back cleanly.
 
 ### Q10 - Argo CD GitOps Loop
 
-Goal: show how desired state moves from Git into the cluster.
+Goal: show the common delivery model with one implementation lane: Argo CD.
 
 - [ ] Install Argo CD locally.
 - [ ] Add an Argo CD Application for tenant overlays.
 - [ ] Add an Argo CD Application for observability manifests.
 - [ ] Show drift detection.
 - [ ] Show sync and rollback from Git.
+- [ ] Keep the docs clear that this is Argo CD, not GoCD.
 - [ ] Keep this as GitOps proof, not a full enterprise deployment system.
 
 Done when: user can explain Git -> Argo CD -> Kubernetes -> policy -> telemetry in under five minutes.

@@ -138,6 +138,8 @@ Tie to identity:
 
 Argo CD is the GitOps control loop.
 
+Keep the story as one delivery model. The concept is common CI/CD governance: Git is reviewed source of truth, changes are applied consistently, drift is visible, and rollback is practiced. This lab implements that model with Argo CD because it is Kubernetes-native and fits the existing Kustomize overlays.
+
 Explain:
 
 ```text
