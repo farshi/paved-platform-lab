@@ -110,6 +110,27 @@ The check prints:
 
 Metrics come from the demo API `/metrics` endpoint. Traces are sent from the Flask OpenTelemetry instrumentation to the in-cluster OpenTelemetry Collector at `otel-collector.observability.svc.cluster.local:4318`.
 
+## PromQL Samples
+
+PromQL is the query language for Prometheus. In this project, PromQL is the small DSL used to turn raw `/metrics` text into useful answers for Grafana panels, alerts, and troubleshooting.
+
+Where to type it:
+
+- Prometheus: open `http://localhost:9090`, paste the query into the expression box, then run it.
+- Grafana: open `http://localhost:3000`, edit a panel, and put the query in the Prometheus query field.
+
+The demo API exports metrics such as `http_requests_total` and `http_request_duration_seconds_bucket`.
+
+The sample query source of truth is `observability/promql-samples.json`. It stores each sample's title, description, and query text.
+
+To use the samples in the UI:
+
+```sh
+make tools-up
+```
+
+Then open `http://localhost:18000`, click the Prometheus card, open a PromQL DSL row, and copy the query.
+
 ## Local Tool Portal
 
 Run:
@@ -125,7 +146,16 @@ This starts local port-forwards and a small portal page:
 - Prometheus: `http://localhost:9090`
 - demo API: `http://localhost:8080`
 
-The portal has cards for Grafana, Prometheus, the demo API, metrics, and health. Cards load the selected tool in an iframe and also include an "Open new tab" link.
+The portal has cards for Grafana, Prometheus, Traffic Lab, the demo API, metrics, and health. Cards load the selected tool in an iframe and also include an "Open new tab" link. When the Prometheus card is selected, the portal shows a PromQL DSL accordion with copy buttons for common queries.
+
+Traffic Lab lets learners trigger demo scenarios:
+
+- normal traffic
+- 500 error burst
+- slow request burst
+- mixed incident
+
+These actions call the port-forwarded demo API and help show why DevOps engineers watch request rate, error rate, and latency together. Scenario source of truth: `observability/traffic-scenarios.json`.
 
 `make tools-up` runs:
 

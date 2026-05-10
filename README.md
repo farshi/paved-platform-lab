@@ -49,6 +49,8 @@ Daily kubectl practice guide: `docs/kubectl-daily-commands.md`
 
 Hard demo questions and answers: `docs/demo-hard-questions.md`
 
+DevOps engineer developer self-service demo runbook: `docs/developer-self-service-platform-runbook.md`
+
 ## Repo Map
 
 - `templates/service` - service scaffold for new teams

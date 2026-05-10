@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Request rate",
+    "description": "Requests per second across all demo API pods.",
+    "query": "sum(rate(http_requests_total{service=\"demo-api\"}[5m]))"
+  },
+  {
+    "title": "5xx error rate",
+    "description": "Server errors per second for the demo API.",
+    "query": "sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[5m]))"
+  },
+  {
+    "title": "Error percentage",
+    "description": "Percent of demo API requests returning 5xx errors.",
+    "query": "(\n  sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[5m]))\n  /\n  sum(rate(http_requests_total{service=\"demo-api\"}[5m]))\n) * 100"
+  },
+  {
+    "title": "P95 latency by namespace",
+    "description": "95 percent of requests are faster than this value, grouped by tenant namespace. The namespace label makes the Prometheus result easier to read than plain {}.",
+    "query": "histogram_quantile(\n  0.95,\n  sum by (le, namespace) (rate(http_request_duration_seconds_bucket{service=\"demo-api\"}[5m]))\n)"
+  },
+  {
+    "title": "Status code breakdown",
+    "description": "Request rate grouped by HTTP status code.",
+    "query": "sum by (status) (rate(http_requests_total{service=\"demo-api\"}[5m]))"
+  },
+  {
+    "title": "Scrape target health",
+    "description": "Shows whether Prometheus can scrape demo API targets. 1 is up, 0 is down.",
+    "query": "up{job=~\".*demo-api.*\"}"
+  }
+]

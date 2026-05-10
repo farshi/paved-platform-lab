@@ -1,8 +1,12 @@
 const http = require("http");
 const cp = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
-const ROOT = "/Users/rfar/dev/platform-guardrails-lab";
+const ROOT = path.resolve(__dirname, "..");
 const PORT = Number(process.env.PORTAL_PORT || 18000);
+const promqlSamples = JSON.parse(fs.readFileSync(path.join(ROOT, "observability/promql-samples.json"), "utf8"));
+const trafficScenarios = JSON.parse(fs.readFileSync(path.join(ROOT, "observability/traffic-scenarios.json"), "utf8"));
 
 const forwards = [
   {
@@ -50,6 +54,70 @@ function stop() {
 
 process.on("SIGINT", stop);
 process.on("SIGTERM", stop);
+
+function callDemoApi(requestPath) {
+  return new Promise((resolve) => {
+    const startedAt = Date.now();
+    const clientRequest = http.request(
+      {
+        hostname: "127.0.0.1",
+        port: 8080,
+        path: requestPath,
+        method: "GET",
+        timeout: 5000,
+      },
+      (clientResponse) => {
+        clientResponse.resume();
+        clientResponse.on("end", () => {
+          resolve({
+            path: requestPath,
+            status: clientResponse.statusCode,
+            durationMs: Date.now() - startedAt,
+          });
+        });
+      },
+    );
+    clientRequest.on("timeout", () => {
+      clientRequest.destroy(new Error("timeout"));
+    });
+    clientRequest.on("error", (error) => {
+      resolve({
+        path: requestPath,
+        error: error.message,
+        durationMs: Date.now() - startedAt,
+      });
+    });
+    clientRequest.end();
+  });
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runTrafficScenario(scenario) {
+  const results = [];
+  for (const step of scenario.steps) {
+    const count = step.count || 1;
+    for (let i = 0; i < count; i += 1) {
+      results.push(await callDemoApi(step.path));
+      if (step.delayMs) await sleep(step.delayMs);
+    }
+  }
+  const ok = results.filter((result) => result.status && result.status < 500).length;
+  const errors = results.filter((result) => result.status && result.status >= 500).length;
+  const failed = results.filter((result) => result.error).length;
+  const maxDurationMs = results.reduce((max, result) => Math.max(max, result.durationMs || 0), 0);
+  return {
+    scenario: scenario.title,
+    requested: results.length,
+    ok,
+    errors,
+    failed,
+    maxDurationMs,
+    results: results.slice(-12),
+  };
+}
 
 const page = `<!doctype html>
 <html lang="en">
@@ -99,7 +167,7 @@ const page = `<!doctype html>
         background: var(--panel);
         padding: 14px;
       }
-      button, a.card {
+      nav button, a.card {
         width: 100%;
         display: block;
         text-align: left;
@@ -112,8 +180,19 @@ const page = `<!doctype html>
         text-decoration: none;
         cursor: pointer;
       }
-      button:hover, a.card:hover {
+      nav button:hover, nav button.active, a.card:hover {
         border-color: var(--accent);
+      }
+      nav button.active {
+        background: #eef5ff;
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        min-width: 0;
+      }
+      .workspace.compact {
+        grid-template-columns: minmax(0, 1fr);
       }
       .title {
         font-size: 14px;
@@ -160,9 +239,78 @@ const page = `<!doctype html>
         border: 0;
         background: white;
       }
+      .promql {
+        border-left: 1px solid var(--line);
+        background: var(--panel);
+        padding: 14px;
+        overflow: auto;
+      }
+      .promql[hidden] {
+        display: none;
+      }
+      .promql h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .promql .hint {
+        margin: 6px 0 14px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      details {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: #fff;
+      }
+      summary {
+        padding: 11px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      details[open] summary {
+        border-bottom: 1px solid var(--line);
+      }
+      .query-body {
+        padding: 10px 12px 12px;
+      }
+      .query-body p {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      pre {
+        margin: 0 0 10px;
+        padding: 10px;
+        overflow: auto;
+        border-radius: 8px;
+        background: #101828;
+        color: #f8fafc;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .copy {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #f8fafc;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .copy:hover {
+        border-color: var(--accent);
+      }
       @media (max-width: 860px) {
         main { grid-template-columns: 1fr; }
         nav { border-right: 0; border-bottom: 1px solid var(--line); }
+        .workspace { grid-template-columns: 1fr; }
+        .promql { border-left: 0; border-top: 1px solid var(--line); }
         .viewer { min-height: 70vh; }
       }
     </style>
@@ -174,13 +322,20 @@ const page = `<!doctype html>
     </header>
     <main>
       <nav id="cards"></nav>
-      <section class="viewer">
-        <div class="toolbar">
-          <div class="url" id="activeUrl"></div>
-          <a class="open" id="openLink" target="_blank" rel="noreferrer">Open new tab</a>
-        </div>
-        <iframe id="frame" title="tool view"></iframe>
-      </section>
+      <div class="workspace compact" id="workspace">
+        <section class="viewer">
+          <div class="toolbar">
+            <div class="url" id="activeUrl"></div>
+            <a class="open" id="openLink" target="_blank" rel="noreferrer">Open new tab</a>
+          </div>
+          <iframe id="frame" title="tool view"></iframe>
+        </section>
+        <aside class="promql" id="promqlPanel" hidden>
+          <h2>PromQL DSL</h2>
+          <div class="hint">Open a row, copy the query, paste it into the Prometheus expression box, then run it.</div>
+          <div id="queryList"></div>
+        </aside>
+      </div>
     </main>
     <script>
       const tools = [
@@ -193,6 +348,11 @@ const page = `<!doctype html>
           name: "Prometheus",
           description: "PromQL query UI for raw metrics.",
           url: "http://localhost:9090/graph"
+        },
+        {
+          name: "Traffic Lab",
+          description: "Generate traffic, errors, and slow requests for dashboard practice.",
+          url: "http://localhost:${PORT}/traffic-lab"
         },
         {
           name: "Demo API",
@@ -215,31 +375,267 @@ const page = `<!doctype html>
       const frame = document.getElementById("frame");
       const activeUrl = document.getElementById("activeUrl");
       const openLink = document.getElementById("openLink");
+      const workspace = document.getElementById("workspace");
+      const promqlPanel = document.getElementById("promqlPanel");
+      const queryList = document.getElementById("queryList");
+      const toolButtons = new Map();
+
+      const promqlSamples = ${JSON.stringify(promqlSamples)};
+
+      function copyText(text, button) {
+        const done = () => {
+          const original = button.textContent;
+          button.textContent = "Copied";
+          setTimeout(() => {
+            button.textContent = original;
+          }, 1200);
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(done);
+          return;
+        }
+        const input = document.createElement("textarea");
+        input.value = text;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+        done();
+      }
+
+      function renderPromqlSamples() {
+        for (const sample of promqlSamples) {
+          const details = document.createElement("details");
+          const summary = document.createElement("summary");
+          const body = document.createElement("div");
+          const description = document.createElement("p");
+          const pre = document.createElement("pre");
+          const code = document.createElement("code");
+          const copy = document.createElement("button");
+
+          summary.textContent = sample.title;
+          body.className = "query-body";
+          description.textContent = sample.description;
+          code.textContent = sample.query;
+          copy.className = "copy";
+          copy.type = "button";
+          copy.textContent = "Copy query";
+          copy.addEventListener("click", () => copyText(sample.query, copy));
+          details.addEventListener("toggle", () => {
+            if (!details.open) return;
+            for (const other of queryList.querySelectorAll("details")) {
+              if (other !== details) other.open = false;
+            }
+          });
+
+          pre.appendChild(code);
+          body.appendChild(description);
+          body.appendChild(pre);
+          body.appendChild(copy);
+          details.appendChild(summary);
+          details.appendChild(body);
+          queryList.appendChild(details);
+        }
+      }
 
       function select(tool) {
         frame.src = tool.url;
         activeUrl.textContent = tool.url;
         openLink.href = tool.url;
+        for (const [name, button] of toolButtons) {
+          button.classList.toggle("active", name === tool.name);
+        }
+        const isPrometheus = tool.name === "Prometheus";
+        promqlPanel.hidden = !isPrometheus;
+        workspace.classList.toggle("compact", !isPrometheus);
       }
 
       for (const tool of tools) {
         const button = document.createElement("button");
         button.innerHTML = '<div class="title">' + tool.name + '</div><div class="desc">' + tool.description + '</div>';
         button.addEventListener("click", () => select(tool));
+        toolButtons.set(tool.name, button);
         cards.appendChild(button);
       }
 
+      renderPromqlSamples();
       select(tools[0]);
+    </script>
+  </body>
+</html>`;
+
+const trafficPage = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Traffic Lab</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --text: #17202a;
+        --muted: #5c6670;
+        --line: #d7dde5;
+        --accent: #1f6feb;
+        --danger: #b42318;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 18px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .intro {
+        margin: 6px 0 18px;
+        max-width: 860px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+      }
+      .scenario {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 14px;
+      }
+      .scenario h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .scenario p {
+        margin: 8px 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .watch {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: var(--text);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      button {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: wait;
+      }
+      .output {
+        margin-top: 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #101828;
+        color: #f8fafc;
+        min-height: 190px;
+        padding: 14px;
+        overflow: auto;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      a {
+        color: var(--accent);
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Traffic Lab</h1>
+    <div class="intro">
+      Run controlled demo traffic, then watch Grafana and Prometheus. Prometheus scrapes on an interval, so panels may take one or two scrape windows to move.
+    </div>
+    <div class="grid" id="scenarios"></div>
+    <pre class="output" id="output">Choose an action. Then check Grafana request rate, error rate, and p95 latency panels.</pre>
+    <script>
+      const scenarios = ${JSON.stringify(trafficScenarios)};
+      const output = document.getElementById("output");
+      const container = document.getElementById("scenarios");
+
+      function setBusy(isBusy) {
+        for (const button of document.querySelectorAll("button")) button.disabled = isBusy;
+      }
+
+      async function runScenario(scenario) {
+        setBusy(true);
+        output.textContent = "running " + scenario.title + "...";
+        try {
+          const response = await fetch("/api/traffic?scenario=" + encodeURIComponent(scenario.id));
+          const body = await response.json();
+          output.textContent = JSON.stringify(body, null, 2) + "\\n\\nNext: open Grafana and watch the panels. If values do not move yet, wait for the next scrape.";
+        } catch (error) {
+          output.textContent = "failed: " + error.message;
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      for (const scenario of scenarios) {
+        const card = document.createElement("section");
+        card.className = "scenario";
+        card.innerHTML =
+          "<h2>" + scenario.title + "</h2>" +
+          "<p>" + scenario.description + "</p>" +
+          "<div class=\\"watch\\"><strong>Watch:</strong> " + scenario.watch + "</div>";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = scenario.button;
+        button.addEventListener("click", () => runScenario(scenario));
+        card.appendChild(button);
+        container.appendChild(card);
+      }
     </script>
   </body>
 </html>`;
 
 for (const forward of forwards) startForward(forward);
 
-const server = http.createServer((request, response) => {
-  if (request.url === "/" || request.url === "/index.html") {
+const server = http.createServer(async (request, response) => {
+  const url = new URL(request.url, `http://127.0.0.1:${PORT}`);
+  if (url.pathname === "/" || url.pathname === "/index.html") {
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     response.end(page);
+    return;
+  }
+  if (url.pathname === "/traffic-lab") {
+    response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    response.end(trafficPage);
+    return;
+  }
+  if (url.pathname === "/api/traffic") {
+    const scenario = trafficScenarios.find((item) => item.id === url.searchParams.get("scenario"));
+    if (!scenario) {
+      response.writeHead(404, { "content-type": "application/json; charset=utf-8" });
+      response.end(JSON.stringify({ error: "unknown scenario" }));
+      return;
+    }
+    const result = await runTrafficScenario(scenario);
+    response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+    response.end(JSON.stringify(result));
     return;
   }
   response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });

@@ -74,6 +74,32 @@ Node.js runs the small local helper scripts. The lab uses dependency-free Node s
 - Installer: `installer/node.installer.sh`
 - Check: `node --version`
 
+### Prometheus
+
+Prometheus stores and queries metrics. In this lab, it scrapes the demo API `/metrics` endpoint through `ServiceMonitor` resources.
+
+- Used by: `make install-observability`, `make observability`, `make tools-up`
+- Open locally: `http://localhost:9090`
+- Query language: PromQL
+
+PromQL sample source of truth: `observability/promql-samples.json`.
+
+To copy/paste samples, run `make tools-up`, open `http://localhost:18000`, click the Prometheus card, and use the PromQL DSL accordion.
+
+Traffic scenario source of truth: `observability/traffic-scenarios.json`.
+
+To generate dashboard movement, run `make tools-up`, open `http://localhost:18000`, click the Traffic Lab card, and run a scenario.
+
+More detail: `observability/README.md`.
+
+### Grafana
+
+Grafana turns Prometheus queries into dashboards. In this lab, it loads the demo API dashboard from `observability/grafana-dashboard-demo-api.yaml`.
+
+- Used by: `make install-observability`, `make tools-up`
+- Open locally: `http://localhost:3000`
+- Login: `admin` / `admin`
+
 ### make
 
 `make` gives the lab short repeatable commands. Teams run `make bootstrap` instead of memorizing long command sequences.

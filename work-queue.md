@@ -164,6 +164,31 @@ Goal: show automated detection and rollback without building a big platform.
 
 Done when: the watcher detects the broken deploy and rolls back cleanly.
 
+### Q10 - Argo CD GitOps Loop
+
+Goal: show how desired state moves from Git into the cluster.
+
+- [ ] Install Argo CD locally.
+- [ ] Add an Argo CD Application for tenant overlays.
+- [ ] Add an Argo CD Application for observability manifests.
+- [ ] Show drift detection.
+- [ ] Show sync and rollback from Git.
+- [ ] Keep this as GitOps proof, not a full enterprise deployment system.
+
+Done when: user can explain Git -> Argo CD -> Kubernetes -> policy -> telemetry in under five minutes.
+
+### Q11 - developer self-service platform Lens
+
+Goal: make the lab directly relevant to a platform engineering, developer self-service platform demo.
+
+- [ ] Add policy-shaped service interface examples without pretending to run full gateway locally.
+- [ ] Add policy checks for JWT/OAuth, quota, spike arrest, and target standards.
+- [ ] Add a GitOps flow for API platform config.
+- [ ] Add docs mapping identity risks to platform controls.
+- [ ] Keep official gateway local development and hybrid install boundaries clear.
+
+Done when: the lab can explain how Kubernetes guardrails, GitOps, and observability map to self-service platform operations.
+
 ## Deferred
 
 - Gateway layer.

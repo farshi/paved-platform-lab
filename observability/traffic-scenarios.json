@@ -1,0 +1,46 @@
+[
+  {
+    "id": "normal",
+    "title": "Normal traffic",
+    "description": "Calls the root and health endpoints. Use this to show request rate moving without creating errors.",
+    "watch": "Grafana Request Rate should rise. Prometheus request-rate PromQL should return a larger value after the next scrape.",
+    "button": "Run normal traffic",
+    "steps": [
+      { "path": "/", "count": 12, "delayMs": 100 },
+      { "path": "/healthz", "count": 8, "delayMs": 100 }
+    ]
+  },
+  {
+    "id": "errors",
+    "title": "500 error burst",
+    "description": "Calls the intentional /fail endpoint. Use this to show why error-rate panels and alerts matter.",
+    "watch": "Grafana Error Rate should rise. Prometheus 5xx and error-percentage queries should move after the next scrape.",
+    "button": "Create 500 errors",
+    "steps": [
+      { "path": "/fail", "count": 12, "delayMs": 120 }
+    ]
+  },
+  {
+    "id": "slow",
+    "title": "Slow request burst",
+    "description": "Calls the /slow endpoint. Use this to show that success responses can still hurt users when latency rises.",
+    "watch": "Grafana Latency P95 should rise. Prometheus p95 latency by namespace should return a higher value after the next scrape.",
+    "button": "Create slow requests",
+    "steps": [
+      { "path": "/slow?seconds=0.3", "count": 10, "delayMs": 80 }
+    ]
+  },
+  {
+    "id": "mixed",
+    "title": "Mixed incident",
+    "description": "Mixes normal, slow, and failing requests. Use this to practice reading multiple signals together.",
+    "watch": "Request rate, 5xx error rate, and p95 latency can all move. This is the scenario closest to a real triage conversation.",
+    "button": "Run mixed incident",
+    "steps": [
+      { "path": "/", "count": 10, "delayMs": 60 },
+      { "path": "/slow?seconds=0.2", "count": 8, "delayMs": 60 },
+      { "path": "/fail", "count": 8, "delayMs": 60 },
+      { "path": "/healthz", "count": 6, "delayMs": 60 }
+    ]
+  }
+]

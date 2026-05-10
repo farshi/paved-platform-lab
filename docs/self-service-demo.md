@@ -2,6 +2,8 @@
 
 Goal: show how a small platform helps teams ship safely without waiting for a central platform engineer at every step.
 
+For a 30-minute developer self-service platform demo flow, use `docs/developer-self-service-platform-runbook.md`.
+
 ## Story
 
 A product team owns a service. The platform gives them a paved road:
