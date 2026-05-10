@@ -105,6 +105,11 @@ def slow():
     return jsonify({"status": "ok", "slept_seconds": delay})
 
 
+@app.get("/fail")
+def fail():
+    return jsonify({"status": "error", "message": "intentional demo failure"}), 500
+
+
 @app.get("/metrics")
 def metrics():
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)

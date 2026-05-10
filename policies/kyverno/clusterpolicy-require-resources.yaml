@@ -14,6 +14,9 @@ spec:
                 - Deployment
                 - StatefulSet
                 - DaemonSet
+              namespaces:
+                - tenant-a
+                - tenant-b
       validate:
         message: CPU and memory requests and limits are required for every container.
         foreach:
@@ -26,4 +29,3 @@ spec:
                 limits:
                   cpu: "?*"
                   memory: "?*"
-

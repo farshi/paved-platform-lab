@@ -14,10 +14,12 @@ spec:
                 - Deployment
                 - StatefulSet
                 - DaemonSet
+              namespaces:
+                - tenant-a
+                - tenant-b
       validate:
         message: Images must come from ghcr.io/rfar/platform-guardrails-lab.
         foreach:
           - list: "request.object.spec.template.spec.containers[]"
             pattern:
               image: "ghcr.io/rfar/platform-guardrails-lab/*"
-

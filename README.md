@@ -33,6 +33,7 @@ Required:
 - `kubectl`
 - `k3d`
 - `helm`
+- `node`
 - `make`
 - `git`
 
@@ -60,6 +61,7 @@ Hard demo questions and answers: `docs/demo-hard-questions.md`
 - `labs/02-policy` - policy enforcement
 - `labs/03-rollback` - break and recover
 - `observability` - OpenTelemetry, Grafana, and SLO examples
+- `scripts` - repeatable evidence checks and the local tool portal
 - `backlog.md` - implementation checklist
 
 ## Demo Order
@@ -71,6 +73,7 @@ Hard demo questions and answers: `docs/demo-hard-questions.md`
 5. Try a bad manifest and watch policy reject it.
 6. Break runtime and run rollback.
 7. Install observability and show logs, metrics, traces, and SLO examples.
+8. Open the local tool portal for Grafana, Prometheus, and the demo API.
 
 ## Make Targets
 
@@ -86,6 +89,8 @@ Hard demo questions and answers: `docs/demo-hard-questions.md`
 - `make check-app`
 - `make evidence`
 - `make install-observability`
+- `make observability`
+- `make tools-up`
 
 ## Next Step
 
@@ -94,3 +99,4 @@ Run the lab in this order:
 - `labs/01-setup` - create local cluster, namespaces, and image
 - `labs/02-policy` - install Kyverno and prove pass/fail admission behavior
 - `labs/03-rollback` - deploy, check health, block bad change, roll back, and collect evidence
+- `observability/README.md` - install observability, verify signals, and open local tools

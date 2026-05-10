@@ -66,6 +66,14 @@ Helm installs packaged Kubernetes software. This lab uses it to install Kyverno 
 - Installer: `installer/helm.installer.sh`
 - Check: `helm version`
 
+### Node.js
+
+Node.js runs the small local helper scripts. The lab uses dependency-free Node scripts so learners do not need an npm project or frontend build step.
+
+- Used by: `make observability`, `make tools-up`
+- Installer: `installer/node.installer.sh`
+- Check: `node --version`
+
 ### make
 
 `make` gives the lab short repeatable commands. Teams run `make bootstrap` instead of memorizing long command sequences.
@@ -120,6 +128,7 @@ make
   -> kubectl applies manifests
   -> helm installs platform add-ons
   -> Kyverno blocks unsafe workloads
+  -> node runs local learning helpers
   -> jq/yq help produce clear evidence
 ```
 

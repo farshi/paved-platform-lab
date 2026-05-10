@@ -38,4 +38,4 @@ Examples:
 - `examples/policy/fail-missing-resources`: rejected by `require-container-resources`
 - `examples/policy/fail-nonroot`: rejected by `require-nonroot-containers`
 
-Tenancy policy note: tenant boundaries are currently covered through namespaces, namespace-scoped RBAC, `ResourceQuota`, `LimitRange`, and tenant overlays. A dedicated Kyverno tenancy policy is deferred.
+Tenancy policy note: these policies apply to `tenant-a` and `tenant-b`. Tenant boundaries are also covered through namespaces, namespace-scoped RBAC, `ResourceQuota`, `LimitRange`, and tenant overlays. A dedicated Kyverno policy that validates tenant naming conventions is deferred.

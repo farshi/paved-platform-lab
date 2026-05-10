@@ -104,12 +104,13 @@ Done when: policy behavior is visible before deploy and in-cluster.
 
 Goal: show signals without bloating MVP.
 
-- [ ] Run `make install-observability`.
-- [ ] Run `make observability`.
-- [ ] Confirm app metrics scrape through ServiceMonitor.
-- [ ] Confirm request rate, latency, and error dashboard panels work.
-- [ ] Confirm one basic trace path or defer traces explicitly.
-- [ ] Keep the observability lab separate from core path.
+- [x] Run `make install-observability`.
+- [x] Run `make observability`.
+- [x] Confirm app metrics scrape through ServiceMonitor.
+- [x] Confirm request rate, latency, and error dashboard panels work.
+- [x] Confirm one basic trace path or defer traces explicitly.
+- [x] Add `make tools-up` local portal for Grafana, Prometheus, and demo API.
+- [x] Keep the observability lab separate from core path.
 
 Done when: user can explain where metrics/traces come from in five minutes.
 

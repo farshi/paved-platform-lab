@@ -7,7 +7,7 @@ NAMESPACE_B ?= tenant-b
 IMAGE_REPO ?= ghcr.io/rfar/platform-guardrails-lab/demo-api
 IMAGE_TAG ?= 0.1.0
 
-.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability validate validate-policies deploy break rollback check-app evidence observability
+.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability validate validate-policies deploy break rollback check-app evidence observability tools-up
 
 help:
 	@echo "Targets:"
@@ -26,6 +26,7 @@ help:
 	@echo "  make check-app      Check demo API health from inside the cluster"
 	@echo "  make evidence       Print compact demo evidence"
 	@echo "  make observability  Install or inspect observability stack"
+	@echo "  make tools-up       Open local portal and port-forward Grafana, Prometheus, and demo API"
 
 install:
 	sh installer/all.installer.sh
@@ -87,4 +88,7 @@ evidence:
 	@sh scripts/evidence.sh
 
 observability:
-	@echo "Use make install-observability after bootstrap."
+	@node scripts/observability-check.js
+
+tools-up:
+	@node scripts/tool-portal.js
