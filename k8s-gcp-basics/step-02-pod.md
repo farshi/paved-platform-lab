@@ -50,7 +50,7 @@ GKE cluster
 
 ## Real-life example
 
-In a banking API:
+In a customer-facing API:
 
 - one Pod may run the payment service
 - another Pod may run the auth service

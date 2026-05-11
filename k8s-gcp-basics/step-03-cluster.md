@@ -46,7 +46,7 @@ GCP project
 
 ## Real-life example
 
-For a bank:
+For a regulated platform:
 
 - one cluster may host API gateway services
 - another cluster may host batch jobs

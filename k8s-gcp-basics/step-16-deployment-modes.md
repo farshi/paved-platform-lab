@@ -99,7 +99,7 @@ new image ready
 
 ## Real-life example
 
-For a bank API:
+For a regulated customer API:
 
 - use rolling update for low-risk changes
 - use canary for risky payment changes

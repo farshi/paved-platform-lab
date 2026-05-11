@@ -6,8 +6,10 @@ NAMESPACE_A ?= tenant-a
 NAMESPACE_B ?= tenant-b
 IMAGE_REPO ?= ghcr.io/rfar/platform-guardrails-lab/demo-api
 IMAGE_TAG ?= 0.1.0
+ARGOCD_REPO_URL ?=
+ARGOCD_TARGET_REVISION ?= main
 
-.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability validate validate-policies deploy break rollback check-app evidence observability tools-up
+.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-up argocd-password validate validate-policies deploy break rollback check-app evidence observability tools-up
 
 help:
 	@echo "Targets:"
@@ -18,6 +20,10 @@ help:
 	@echo "  make scaffold       Show service template path"
 	@echo "  make install-kyverno Install Kyverno and baseline policies"
 	@echo "  make install-observability Install Prometheus, Grafana, and OTel collector"
+	@echo "  make install-argocd Install Argo CD into the local cluster"
+	@echo "  make argocd-apps   Register GitOps applications with Argo CD"
+	@echo "  make argocd        Inspect Argo CD applications"
+	@echo "  make argocd-up     Port-forward Argo CD UI on https://localhost:18080"
 	@echo "  make validate       Validate manifests and policies"
 	@echo "  make validate-policies Validate focused policy pass/fail examples"
 	@echo "  make deploy         Deploy good version"
@@ -60,6 +66,23 @@ install-observability:
 	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n observability --create-namespace -f observability/kube-prometheus-stack-values.yaml --wait
 	kubectl apply -k observability
 
+install-argocd:
+	kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+	kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+	kubectl wait --for=condition=Available deployment -n argocd --all --timeout=180s
+
+argocd-apps:
+	@ARGOCD_REPO_URL="$(ARGOCD_REPO_URL)" ARGOCD_TARGET_REVISION="$(ARGOCD_TARGET_REVISION)" node scripts/argocd/render-apps.js | kubectl apply -f -
+
+argocd:
+	@node scripts/argocd/check.js
+
+argocd-up:
+	kubectl -n argocd port-forward svc/argocd-server 18080:443
+
+argocd-password:
+	@node scripts/argocd/password.js
+
 validate:
 	kubectl apply -k examples/tenant-a --dry-run=server
 	kubectl apply -k examples/tenant-b --dry-run=server
@@ -88,7 +111,7 @@ evidence:
 	@sh scripts/evidence.sh
 
 observability:
-	@node scripts/observability-check.js
+	@node scripts/observability/check.js
 
 tools-up:
-	@node scripts/tool-portal.js
+	@node scripts/observability/tool-portal.js

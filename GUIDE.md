@@ -39,7 +39,7 @@ The public Macquarie BFS DevOps role centers on:
 - self-service
 - Kubernetes
 
-This repo can show all of that in a bank-safe, non-proprietary way.
+This repo can show all of that in a public, non-proprietary way.
 
 ## MVP scope
 
@@ -97,7 +97,7 @@ The README must answer:
 
 If a hiring manager cannot understand the repo in one minute, the repo is too big.
 
-## Demo flow for demo
+## Demo flow for a learning session
 
 Use this exact story:
 
@@ -145,7 +145,7 @@ Nice extra:
 
 7. Generate a small audit evidence artifact summarizing what policies passed.
 
-That last item is a strong bank signal.
+That last item is a strong regulated-platform signal.
 
 ## What to avoid
 
@@ -224,4 +224,3 @@ Yes, open source can help you here.
 But only if it is tightly aligned to the actual job.
 
 `platform-guardrails-lab` is the best fit.
-

@@ -24,7 +24,7 @@ Keep one teaching spine:
 - Setup, policy, and rollback labs exist.
 - Make targets exist for `bootstrap`, `reset`, `build`, `scaffold`, `install-kyverno`, `install-observability`, `validate`, `deploy`, `break`, `rollback`, and `observability`.
 - Observability scaffold exists with collector, ServiceMonitors, PrometheusRule, Grafana dashboard, and SLO notes.
-- Self-service demo story exists in `docs/self-service-demo.md`.
+- Platform-as-a-service demo story exists in `docs/runbooks/platform-as-a-service.md`.
 - Core local run was proved on 2026-05-09: bootstrap, build, Kyverno install, validate, deploy, blocked bad manifest, and rollback.
 - Evidence output exists through `make evidence`.
 - Gateway stays phase 2 unless ingress becomes insufficient.
@@ -32,11 +32,11 @@ Keep one teaching spine:
 
 ## Next Work
 
-### Q0 - Self-Service Demo Story
+### Q0 - Platform-as-a-Service Demo Story
 
 Goal: document the simple story a user can follow to learn self-service platform engineering.
 
-- [x] Create one step-by-step demo demo doc.
+- [x] Create one step-by-step platform demo doc.
 - [x] Explain how a team goes from service code to safe deployment.
 - [x] Show where guardrails protect the platform.
 - [x] Show where telemetry proves user impact.
@@ -44,7 +44,7 @@ Goal: document the simple story a user can follow to learn self-service platform
 - [x] Define the small watcher that detects fast SLO burn and triggers rollback.
 - [x] Keep the path simple enough to explain in five minutes.
 
-Done when: the repo has one readable story for an demo and for a team learning the platform.
+Done when: the repo has one readable story for a team learning the platform.
 
 ### Q1 - Prove Core Lab Runs
 
@@ -73,7 +73,7 @@ Goal: make the demo easy to inspect and explain.
 - [x] Add a short audit view for what changed and why.
 - [x] Document one before/after rollback example.
 
-Done when: one command or short command sequence produces demo-ready proof.
+Done when: one command or short command sequence produces operator-ready proof.
 
 ### Q3 - Lab Docs Tightening
 
@@ -169,23 +169,23 @@ Done when: the watcher detects the broken deploy and rolls back cleanly.
 Goal: show the common delivery model with one implementation lane: Argo CD.
 
 - [ ] Install Argo CD locally.
-- [ ] Add an Argo CD Application for tenant overlays.
-- [ ] Add an Argo CD Application for observability manifests.
+- [x] Add an Argo CD Application for tenant overlays.
+- [x] Add an Argo CD Application for observability manifests.
 - [ ] Show drift detection.
 - [ ] Show sync and rollback from Git.
-- [ ] Keep the docs clear that this is Argo CD, not GoCD.
-- [ ] Keep this as GitOps proof, not a full enterprise deployment system.
+- [x] Keep the docs clear that this is Argo CD, not GoCD.
+- [x] Keep this as GitOps proof, not a full enterprise deployment system.
 
 Done when: user can explain Git -> Argo CD -> Kubernetes -> policy -> telemetry in under five minutes.
 
-### Q11 - developer self-service platform Lens
+### Q11 - Platform Practices Lens
 
-Goal: make the lab directly relevant to a platform engineering, developer self-service platform demo.
+Goal: make the lab directly relevant to an platform practices learning path.
 
 - [ ] Add policy-shaped service interface examples without pretending to run full gateway locally.
 - [ ] Add policy checks for JWT/OAuth, quota, spike arrest, and target standards.
 - [ ] Add a GitOps flow for API platform config.
-- [ ] Add docs mapping identity risks to platform controls.
+- [ ] Add docs mapping API platform risks to platform controls.
 - [ ] Keep official gateway local development and hybrid install boundaries clear.
 
 Done when: the lab can explain how Kubernetes guardrails, GitOps, and observability map to self-service platform operations.

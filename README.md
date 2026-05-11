@@ -1,6 +1,6 @@
-# Platform Guardrails Lab
+# Paved Platform Lab
 
-Local-only Kubernetes playground for safe self-service, policy enforcement, and fast rollback.
+Local Kubernetes playground for learning how to build a small platform-as-a-service path with guardrails, GitOps, observability, API gateway patterns, and a unified local dashboard.
 
 ## What This Shows
 
@@ -11,6 +11,7 @@ Local-only Kubernetes playground for safe self-service, policy enforcement, and 
 - namespace, RBAC, and resource limits for safe self-service
 - `kubectl rollout undo` for fast recovery
 - OpenTelemetry, Grafana, and simple SLO examples as a second layer
+- local tool portal with Grafana, Prometheus, traffic actions, copyable PromQL snippets, and rendered Markdown runbooks
 
 ## Why It Exists
 
@@ -47,15 +48,15 @@ Simple descriptions: `docs/tools.md`
 
 Daily kubectl practice guide: `docs/kubectl-daily-commands.md`
 
-Hard demo questions and answers: `docs/demo-hard-questions.md`
+Guided runbooks: `docs/runbooks/README.md`
 
-DevOps engineer developer self-service demo runbook: `docs/developer-self-service-platform-runbook.md`
+Platform operator questions and answers: `docs/questions/platform-operator.md`
 
 ## Repo Map
 
 - `templates/service` - service scaffold for new teams
 - `policies/kyverno` - guardrails and policy examples
-- `docs` - architecture, runbook, and decisions
+- `docs` - architecture, runbooks, questions, and decisions
 - `services/demo-api` - the sample API service
 - `examples/tenant-a` - working tenant example
 - `examples/tenant-b` - second tenant example

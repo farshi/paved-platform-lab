@@ -42,7 +42,7 @@ You have a company site:
 - Ingress sends `/login` to login Service
 - Ingress sends `/pay` to payment Service
 
-## Example 2: banking API
+## Example 2: regulated customer API
 
 You have partner APIs:
 
@@ -51,11 +51,10 @@ You have partner APIs:
 - API Gateway logs the request
 - request then goes to the right Service in GKE
 
-## Important demo note
+## Important operator note
 
 Do not say `GKE has its own API gateway` for app traffic.
 Say:
 
 - Kubernetes has its own **API server** for cluster control
 - your app traffic uses **Ingress**, **Gateway API**, **Load Balancer**, or a separate **API Gateway**
-

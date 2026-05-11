@@ -48,7 +48,7 @@ new image pushed
 
 ## Real-life example
 
-For a banking API:
+For a customer-facing API:
 
 - version 1 is running
 - you update Deployment to version 2

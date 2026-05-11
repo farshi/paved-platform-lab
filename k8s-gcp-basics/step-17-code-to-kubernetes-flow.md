@@ -39,7 +39,7 @@ For a Python API:
 
 ## Why this matters
 
-This is the chain you should explain in demos.
+This is the chain to explain when walking someone through the platform path.
 It shows you understand build, storage, and runtime.
 
 ## Easy words
@@ -55,4 +55,3 @@ If version 4 is bad:
 - update Deployment back to version 3
 - Kubernetes starts old image again
 - traffic keeps flowing through the Service
-

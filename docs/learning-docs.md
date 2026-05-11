@@ -54,7 +54,7 @@ Create as a mentoring track around platform engineering:
 - Variable governance: low-risk paths stay self-service; high-risk paths get stronger controls.
 - Adoption: docs are good only if teams can use them without platform-team hand-holding.
 
-## Sentence Bank
+## Reusable Phrasing
 
 Use these as internal phrasing anchors. Adapt them to the lesson; do not overquote them.
 

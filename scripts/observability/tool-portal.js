@@ -3,10 +3,40 @@ const cp = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "../..");
 const PORT = Number(process.env.PORTAL_PORT || 18000);
 const promqlSamples = JSON.parse(fs.readFileSync(path.join(ROOT, "observability/promql-samples.json"), "utf8"));
 const trafficScenarios = JSON.parse(fs.readFileSync(path.join(ROOT, "observability/traffic-scenarios.json"), "utf8"));
+const guideFiles = [
+  {
+    title: "Start Here",
+    path: "docs/runbooks/README.md",
+    description: "Choose the right guided session.",
+  },
+  {
+    title: "Core Lab",
+    path: "docs/runbooks/core-lab.md",
+    description: "Run the main platform guardrails path.",
+  },
+  {
+    title: "Platform-as-a-Service",
+    path: "docs/runbooks/platform-as-a-service.md",
+    description: "Follow the paved-road platform story.",
+  },
+  {
+    title: "Platform Practices",
+    path: "docs/runbooks/platform-practices.md",
+    description: "Map the platform model to API gateway and policy-shaped work.",
+  },
+  {
+    title: "Operator Questions",
+    path: "docs/questions/platform-operator.md",
+    description: "Review hard platform tradeoff questions and answers.",
+  },
+].map((item) => ({
+  ...item,
+  markdown: fs.readFileSync(path.join(ROOT, item.path), "utf8"),
+}));
 
 const forwards = [
   {
@@ -94,6 +124,118 @@ function callDemoApi(requestPath) {
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function inlineMarkdown(value) {
+  let output = escapeHtml(value);
+  output = output.replace(/`([^`]+)`/g, "<code>$1</code>");
+  output = output.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  output = output.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, href) => {
+    if (href.endsWith(".md")) {
+      return `<a href="#guide-${escapeHtml(href)}" data-guide-path="${escapeHtml(href)}">${label}</a>`;
+    }
+    return `<a href="${href}" target="_blank" rel="noreferrer">${label}</a>`;
+  });
+  return output;
+}
+
+function renderMarkdown(markdown) {
+  const lines = markdown.split(/\r?\n/);
+  const html = [];
+  let inCode = false;
+  let code = [];
+  let inList = false;
+  let listTag = "";
+
+  function closeList() {
+    if (!inList) return;
+    html.push(`</${listTag}>`);
+    inList = false;
+    listTag = "";
+  }
+
+  function closeCode() {
+    if (!inCode) return;
+    html.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+    inCode = false;
+    code = [];
+  }
+
+  for (const line of lines) {
+    if (line.startsWith("```")) {
+      if (inCode) closeCode();
+      else {
+        closeList();
+        inCode = true;
+        code = [];
+      }
+      continue;
+    }
+    if (inCode) {
+      code.push(line);
+      continue;
+    }
+    if (!line.trim()) {
+      closeList();
+      continue;
+    }
+    const heading = line.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      closeList();
+      const level = Math.min(heading[1].length, 4);
+      html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+      continue;
+    }
+    const quote = line.match(/^>\s+(.+)$/);
+    if (quote) {
+      closeList();
+      html.push(`<blockquote>${inlineMarkdown(quote[1])}</blockquote>`);
+      continue;
+    }
+    const item = line.match(/^-\s+(.+)$/);
+    if (item) {
+      if (!inList || listTag !== "ul") {
+        closeList();
+        html.push("<ul>");
+        inList = true;
+        listTag = "ul";
+      }
+      html.push(`<li>${inlineMarkdown(item[1])}</li>`);
+      continue;
+    }
+    const orderedItem = line.match(/^\d+\.\s+(.+)$/);
+    if (orderedItem) {
+      if (!inList || listTag !== "ol") {
+        closeList();
+        html.push("<ol>");
+        inList = true;
+        listTag = "ol";
+      }
+      html.push(`<li>${inlineMarkdown(orderedItem[1])}</li>`);
+      continue;
+    }
+    closeList();
+    html.push(`<p>${inlineMarkdown(line)}</p>`);
+  }
+  closeCode();
+  closeList();
+  return html.join("\n");
+}
+
+const renderedGuidePages = guideFiles.map((item) => ({
+  title: item.title,
+  path: item.path,
+  description: item.description,
+  html: renderMarkdown(item.markdown),
+}));
 
 async function runTrafficScenario(scenario) {
   const results = [];
@@ -355,6 +497,11 @@ const page = `<!doctype html>
           url: "http://localhost:${PORT}/traffic-lab"
         },
         {
+          name: "User Guide",
+          description: "Step through runbooks and questions with Start, Back, Next, and Done.",
+          url: "http://localhost:${PORT}/guide"
+        },
+        {
           name: "Demo API",
           description: "Application root endpoint through Service port-forward.",
           url: "http://localhost:8080/"
@@ -612,6 +759,323 @@ const trafficPage = `<!doctype html>
   </body>
 </html>`;
 
+const guidePage = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Paved Platform Lab Guide</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --text: #17202a;
+        --muted: #5c6670;
+        --line: #d7dde5;
+        --accent: #1f6feb;
+        --done: #0f766e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+      }
+      h1 {
+        margin: 0;
+        font-size: 19px;
+      }
+      .sub {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        min-height: calc(100vh - 73px);
+      }
+      aside {
+        border-right: 1px solid var(--line);
+        background: var(--panel);
+        padding: 14px;
+      }
+      .step {
+        width: 100%;
+        display: block;
+        text-align: left;
+        padding: 11px 12px;
+        margin-bottom: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .step.active {
+        border-color: var(--accent);
+        background: #eef5ff;
+      }
+      .step.done {
+        border-color: #99f6e4;
+      }
+      .step-title {
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .step-desc {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      main {
+        min-width: 0;
+        padding: 18px;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 0 auto 14px;
+      }
+      .controls button {
+        min-width: 44px;
+        min-height: 38px;
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .controls.bottom {
+        margin: 14px auto 0;
+      }
+      .controls button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+      .controls button.done {
+        border-color: var(--done);
+        background: var(--done);
+        color: #fff;
+      }
+      .controls button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .progress {
+        margin-left: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .progress.done {
+        color: var(--done);
+        font-weight: 700;
+      }
+      article {
+        max-width: 980px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+      article h1, article h2, article h3, article h4 {
+        margin: 18px 0 8px;
+      }
+      article h1:first-child {
+        margin-top: 0;
+      }
+      article p, article li {
+        color: #26313d;
+        line-height: 1.6;
+      }
+      article blockquote {
+        margin: 14px 0;
+        padding: 10px 14px;
+        border-left: 4px solid var(--accent);
+        background: #f8fafc;
+        color: #26313d;
+      }
+      article code {
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: #eef2f7;
+      }
+      article pre {
+        overflow: auto;
+        padding: 12px;
+        border-radius: 8px;
+        background: #101828;
+        color: #f8fafc;
+        line-height: 1.5;
+      }
+      article pre code {
+        padding: 0;
+        background: transparent;
+        color: inherit;
+      }
+      @media (max-width: 860px) {
+        header { align-items: flex-start; flex-direction: column; }
+        .layout { grid-template-columns: 1fr; }
+        aside { border-right: 0; border-bottom: 1px solid var(--line); }
+        .controls { flex-wrap: wrap; }
+        .progress { margin-left: 0; width: 100%; text-align: center; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Paved Platform Lab Guide</h1>
+        <div class="sub">Rendered from Markdown in docs/runbooks and docs/questions.</div>
+      </div>
+    </header>
+    <div class="layout">
+      <aside id="steps"></aside>
+      <main>
+        <div class="controls" id="topControls">
+          <button class="back" aria-label="Back">&lt;</button>
+          <button class="next primary" aria-label="Next">&gt;</button>
+          <div class="progress"></div>
+        </div>
+        <article id="content"></article>
+        <div class="controls bottom" id="bottomControls">
+          <button class="back" aria-label="Back">&lt;</button>
+          <button class="next primary" aria-label="Next">&gt;</button>
+          <div class="progress"></div>
+        </div>
+      </main>
+    </div>
+    <script>
+      const pages = ${JSON.stringify(renderedGuidePages)};
+      const doneKey = "paved-platform-lab-guide-done";
+      const indexKey = "paved-platform-lab-guide-index";
+      const doneSet = new Set(JSON.parse(localStorage.getItem(doneKey) || "[]"));
+      let index = Number(localStorage.getItem(indexKey) || 0);
+      if (!Number.isFinite(index) || index < 0 || index >= pages.length) index = 0;
+
+      const steps = document.getElementById("steps");
+      const content = document.getElementById("content");
+      const progressItems = [...document.querySelectorAll(".progress")];
+      const backButtons = [...document.querySelectorAll(".back")];
+      const nextButtons = [...document.querySelectorAll(".next")];
+      const buttons = [];
+
+      function escapeText(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char]);
+      }
+
+      function persist() {
+        localStorage.setItem(doneKey, JSON.stringify([...doneSet]));
+        localStorage.setItem(indexKey, String(index));
+      }
+
+      function guideIndexForPath(guidePath) {
+        const normalized = guidePath.replace(/^\\.\\//, "");
+        return pages.findIndex((page) => (
+          page.path === normalized ||
+          page.path.endsWith("/" + normalized) ||
+          page.path.split("/").pop() === normalized.split("/").pop()
+        ));
+      }
+
+      function render() {
+        const page = pages[index];
+        const allDone = doneSet.size === pages.length;
+        const guideComplete = allDone && index === pages.length - 1;
+        content.innerHTML = page.html;
+        for (const item of progressItems) {
+          item.textContent = "Step " + (index + 1) + " of " + pages.length + " | " + doneSet.size + " done";
+          item.classList.toggle("done", allDone);
+          item.hidden = guideComplete;
+        }
+        for (const button of backButtons) {
+          button.hidden = false;
+          button.disabled = index === 0;
+        }
+        for (const button of nextButtons) {
+          button.hidden = guideComplete;
+          button.disabled = false;
+        }
+        for (let i = 0; i < buttons.length; i += 1) {
+          buttons[i].classList.toggle("active", i === index);
+          buttons[i].classList.toggle("done", doneSet.has(i));
+        }
+        persist();
+      }
+
+      for (let i = 0; i < pages.length; i += 1) {
+        const page = pages[i];
+        const button = document.createElement("div");
+        button.className = "step";
+        button.setAttribute("role", "button");
+        button.tabIndex = 0;
+        button.innerHTML =
+          '<div class="step-title">' + (i + 1) + ". " + escapeText(page.title) + '</div>' +
+          '<div class="step-desc">' + escapeText(page.description) + '</div>';
+        button.addEventListener("click", () => {
+          index = i;
+          render();
+        });
+        button.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          index = i;
+          render();
+        });
+        buttons.push(button);
+        steps.appendChild(button);
+      }
+
+      content.addEventListener("click", (event) => {
+        const link = event.target.closest("a[data-guide-path]");
+        if (!link) return;
+        const nextIndex = guideIndexForPath(link.dataset.guidePath || "");
+        if (nextIndex < 0) return;
+        event.preventDefault();
+        index = nextIndex;
+        render();
+      });
+
+      for (const button of backButtons) button.addEventListener("click", () => {
+        if (index > 0) {
+          index -= 1;
+        }
+        render();
+      });
+      for (const button of nextButtons) button.addEventListener("click", () => {
+        doneSet.add(index);
+        if (index < pages.length - 1) index += 1;
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>`;
+
 for (const forward of forwards) startForward(forward);
 
 const server = http.createServer(async (request, response) => {
@@ -624,6 +1088,11 @@ const server = http.createServer(async (request, response) => {
   if (url.pathname === "/traffic-lab") {
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     response.end(trafficPage);
+    return;
+  }
+  if (url.pathname === "/guide") {
+    response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    response.end(guidePage);
     return;
   }
   if (url.pathname === "/api/traffic") {

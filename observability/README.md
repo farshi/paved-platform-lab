@@ -146,7 +146,7 @@ This starts local port-forwards and a small portal page:
 - Prometheus: `http://localhost:9090`
 - demo API: `http://localhost:8080`
 
-The portal has cards for Grafana, Prometheus, Traffic Lab, the demo API, metrics, and health. Cards load the selected tool in an iframe and also include an "Open new tab" link. When the Prometheus card is selected, the portal shows a PromQL DSL accordion with copy buttons for common queries.
+The portal has cards for Grafana, Prometheus, Traffic Lab, User Guide, the demo API, metrics, and health. Cards load the selected tool in an iframe and also include an "Open new tab" link. When the Prometheus card is selected, the portal shows a PromQL DSL accordion with copy buttons for common queries.
 
 Traffic Lab lets learners trigger demo scenarios:
 
@@ -157,10 +157,20 @@ Traffic Lab lets learners trigger demo scenarios:
 
 These actions call the port-forwarded demo API and help show why DevOps engineers watch request rate, error rate, and latency together. Scenario source of truth: `observability/traffic-scenarios.json`.
 
+User Guide renders Markdown from:
+
+- `docs/runbooks/README.md`
+- `docs/runbooks/core-lab.md`
+- `docs/runbooks/platform-as-a-service.md`
+- `docs/runbooks/platform-practices.md`
+- `docs/questions/platform-operator.md`
+
+The guide has Start, Back, Next, and Done controls. Done state is stored in browser local storage.
+
 `make tools-up` runs:
 
 ```sh
-node scripts/tool-portal.js
+node scripts/observability/tool-portal.js
 ```
 
 That script starts these `kubectl port-forward` processes:

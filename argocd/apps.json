@@ -1,0 +1,26 @@
+[
+  {
+    "name": "platform-guardrails-tenant-a",
+    "path": "examples/tenant-a",
+    "namespace": "tenant-a",
+    "description": "Tenant A workload, namespace, quota, limits, and RBAC."
+  },
+  {
+    "name": "platform-guardrails-tenant-b",
+    "path": "examples/tenant-b",
+    "namespace": "tenant-b",
+    "description": "Tenant B workload, namespace, quota, limits, and RBAC."
+  },
+  {
+    "name": "platform-guardrails-policies",
+    "path": "policies/kyverno",
+    "namespace": "kyverno",
+    "description": "Kyverno policy guardrails."
+  },
+  {
+    "name": "platform-guardrails-observability",
+    "path": "observability",
+    "namespace": "observability",
+    "description": "ServiceMonitor, PrometheusRule, Grafana dashboard, and OTel collector manifests."
+  }
+]

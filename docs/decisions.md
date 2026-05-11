@@ -32,7 +32,7 @@ Why Argo CD:
 - Kubernetes-native GitOps controller.
 - Fits the existing Kustomize overlays.
 - Shows drift detection, sync, and app health without replacing the current manifests.
-- Stronger fit for cloud-native platform demos and the developer self-service platform story.
+- Stronger fit for cloud-native platform learning and the platform practices story.
 - CNCF reports Argo CD as a majority-adopted GitOps solution for Kubernetes, and Argo is a CNCF graduated project.
 
 Clarification:

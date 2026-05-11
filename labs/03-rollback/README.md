@@ -75,4 +75,4 @@ Expected evidence sections:
 - rollout success is visible
 - app health is tested through Kubernetes DNS and Service routing
 - unsafe changes are blocked by policy
-- recovery path is simple enough to explain in an demo
+- recovery path is simple enough to explain in a live demo
