@@ -29,6 +29,11 @@ const guideFiles = [
     description: "Map the platform model to API gateway and policy-shaped work.",
   },
   {
+    title: "Kubernetes And Argo CD Basics",
+    path: "docs/questions/kubernetes-argocd-basics.md",
+    description: "Review namespaces, services, pods, nodes, CRDs, and Argo CD sync.",
+  },
+  {
     title: "Operator Questions",
     path: "docs/questions/platform-operator.md",
     description: "Review hard platform tradeoff questions and answers.",
@@ -52,6 +57,13 @@ const forwards = [
     url: "http://localhost:9090",
   },
   {
+    name: "Argo CD",
+    local: 18080,
+    waitArgs: ["wait", "--for=condition=Available", "deployment/argocd-server", "-n", "argocd", "--timeout=180s"],
+    args: ["port-forward", "-n", "argocd", "svc/argocd-server", "18080:443"],
+    url: "https://localhost:18080",
+  },
+  {
     name: "Demo API",
     local: 8080,
     args: ["port-forward", "-n", "tenant-a", "svc/demo-api", "8080:80"],
@@ -61,8 +73,8 @@ const forwards = [
 
 const children = [];
 
-function startForward(forward) {
-  const child = cp.spawn("kubectl", forward.args, {
+function spawnKubectl(forward, args) {
+  const child = cp.spawn("kubectl", args, {
     cwd: ROOT,
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -73,6 +85,22 @@ function startForward(forward) {
     process.stderr.write(`[${forward.name}] ${chunk}`);
   });
   children.push(child);
+  return child;
+}
+
+function startForward(forward) {
+  if (!forward.waitArgs) {
+    spawnKubectl(forward, forward.args);
+    return;
+  }
+  const wait = spawnKubectl(forward, forward.waitArgs);
+  wait.on("exit", (code) => {
+    if (code === 0) {
+      spawnKubectl(forward, forward.args);
+      return;
+    }
+    process.stderr.write(`[${forward.name}] not ready; skipping port-forward\n`);
+  });
 }
 
 function stop() {
@@ -381,6 +409,33 @@ const page = `<!doctype html>
         border: 0;
         background: white;
       }
+      .external-panel {
+        display: grid;
+        gap: 12px;
+        padding: 24px;
+        align-content: start;
+        background: #fff;
+      }
+      .external-panel[hidden] {
+        display: none;
+      }
+      .external-panel h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .external-panel p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .external-panel code {
+        padding: 2px 5px;
+        border-radius: 5px;
+        background: #eef2f7;
+      }
+      .external-panel .open {
+        justify-self: start;
+      }
       .promql {
         border-left: 1px solid var(--line);
         background: var(--panel);
@@ -471,6 +526,7 @@ const page = `<!doctype html>
             <a class="open" id="openLink" target="_blank" rel="noreferrer">Open new tab</a>
           </div>
           <iframe id="frame" title="tool view"></iframe>
+          <div class="external-panel" id="externalPanel" hidden></div>
         </section>
         <aside class="promql" id="promqlPanel" hidden>
           <h2>PromQL DSL</h2>
@@ -492,13 +548,21 @@ const page = `<!doctype html>
           url: "http://localhost:9090/graph"
         },
         {
+          name: "Argo CD",
+          description: "GitOps sync, health, and drift view for lab applications.",
+          url: "https://localhost:18080",
+          external: true,
+          externalTitle: "Open Argo CD Directly",
+          externalBody: "Argo CD uses self-signed HTTPS in this local lab, so browsers often block it inside the portal iframe. Open it in a new tab, accept the local certificate warning, then log in as admin. Get the password with make argocd-password."
+        },
+        {
           name: "Traffic Lab",
           description: "Generate traffic, errors, and slow requests for dashboard practice.",
           url: "http://localhost:${PORT}/traffic-lab"
         },
         {
           name: "User Guide",
-          description: "Step through runbooks and questions with Start, Back, Next, and Done.",
+          description: "Step through runbooks and questions with back and next controls.",
           url: "http://localhost:${PORT}/guide"
         },
         {
@@ -525,6 +589,7 @@ const page = `<!doctype html>
       const workspace = document.getElementById("workspace");
       const promqlPanel = document.getElementById("promqlPanel");
       const queryList = document.getElementById("queryList");
+      const externalPanel = document.getElementById("externalPanel");
       const toolButtons = new Map();
 
       const promqlSamples = ${JSON.stringify(promqlSamples)};
@@ -586,7 +651,21 @@ const page = `<!doctype html>
       }
 
       function select(tool) {
-        frame.src = tool.url;
+        if (tool.external) {
+          frame.hidden = true;
+          frame.removeAttribute("src");
+          externalPanel.hidden = false;
+          externalPanel.innerHTML =
+            "<h2>" + tool.externalTitle + "</h2>" +
+            "<p>" + tool.externalBody + "</p>" +
+            '<p>URL: <code>' + tool.url + "</code></p>" +
+            '<a class="open" href="' + tool.url + '" target="_blank" rel="noreferrer">Open Argo CD</a>';
+        } else {
+          externalPanel.hidden = true;
+          externalPanel.innerHTML = "";
+          frame.hidden = false;
+          frame.src = tool.url;
+        }
         activeUrl.textContent = tool.url;
         openLink.href = tool.url;
         for (const [name, button] of toolButtons) {

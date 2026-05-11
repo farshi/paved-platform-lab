@@ -82,6 +82,8 @@ Install targets are split by where the software runs:
 - `make install-addons`: in-cluster platform add-ons after `make bootstrap`
 - `make install-kyverno`, `make install-observability`, `make install-argocd`: one add-on at a time for teaching
 
+After Argo CD is installed, `make tools-up` also waits for `argocd-server` and forwards the UI to `https://localhost:18080`.
+
 ### Node.js
 
 Node.js runs the small local helper scripts. The lab uses dependency-free Node scripts so learners do not need an npm project or frontend build step.
@@ -105,6 +107,8 @@ To copy/paste samples, run `make tools-up`, open `http://localhost:18000`, click
 Traffic scenario source of truth: `observability/traffic-scenarios.json`.
 
 To generate dashboard movement, run `make tools-up`, open `http://localhost:18000`, click the Traffic Lab card, and run a scenario.
+
+The same portal includes an Argo CD card after `make install-argocd` and `make argocd-apps` have run. The browser may show a local certificate warning for the Argo CD frame because the upstream service uses self-signed TLS.
 
 More detail: `observability/README.md`.
 

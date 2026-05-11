@@ -34,7 +34,7 @@ help:
 	@echo "  make check-app      Check demo API health from inside the cluster"
 	@echo "  make evidence       Print compact demo evidence"
 	@echo "  make observability  Install or inspect observability stack"
-	@echo "  make tools-up       Open local portal and port-forward Grafana, Prometheus, and demo API"
+	@echo "  make tools-up       Open local portal and port-forward Grafana, Prometheus, Argo CD, and demo API"
 
 install: install-tools
 

@@ -76,8 +76,8 @@ Platform operator questions and answers: `docs/questions/platform-operator.md`
 5. Try a bad manifest and watch policy reject it.
 6. Break runtime and run rollback.
 7. Install observability and show logs, metrics, traces, and SLO examples.
-8. Open the local tool portal for Grafana, Prometheus, and the demo API.
-9. Install Argo CD and register the GitOps applications.
+8. Install Argo CD and register the GitOps applications.
+9. Open the local tool portal for Grafana, Prometheus, Argo CD, and the demo API.
 
 ## Make Targets
 
@@ -105,6 +105,8 @@ Platform operator questions and answers: `docs/questions/platform-operator.md`
 `make install` is an alias for `make install-tools`. It checks local command-line tools, including the Argo CD CLI. It does not install anything into Kubernetes.
 
 After `make bootstrap`, use `make install-addons` to install the in-cluster platform add-ons: Kyverno, observability, Argo CD, and Argo CD app registration. You can still run the individual add-on targets when teaching each layer step by step.
+
+`make tools-up` is the single long-running local UI command. It opens the portal and port-forwards Grafana, Prometheus, Argo CD, and the demo API.
 
 ## Next Step
 
