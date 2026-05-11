@@ -44,13 +44,21 @@ install-tools:
 install-addons: install-kyverno install-observability install-argocd argocd-apps
 
 bootstrap:
-	k3d cluster create $(CLUSTER_NAME) $(K3D_ARGS)
+	@if k3d cluster list --no-headers | awk '{print $$1}' | grep -qx "$(CLUSTER_NAME)"; then \
+		echo "cluster $(CLUSTER_NAME): exists"; \
+	else \
+		k3d cluster create $(CLUSTER_NAME) $(K3D_ARGS); \
+	fi
 	kubectl create namespace $(NAMESPACE_A) --dry-run=client -o yaml | kubectl apply -f -
 	kubectl create namespace $(NAMESPACE_B) --dry-run=client -o yaml | kubectl apply -f -
 	kubectl apply -f observability/namespace.yaml
 
 reset:
-	k3d cluster delete $(CLUSTER_NAME)
+	@if k3d cluster list --no-headers | awk '{print $$1}' | grep -qx "$(CLUSTER_NAME)"; then \
+		k3d cluster delete $(CLUSTER_NAME); \
+	else \
+		echo "cluster $(CLUSTER_NAME): already absent"; \
+	fi
 
 build:
 	docker build -t $(IMAGE_REPO):$(IMAGE_TAG) services/demo-api
@@ -74,8 +82,9 @@ install-observability:
 
 install-argocd:
 	kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-	kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+	kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 	kubectl wait --for=condition=Available deployment -n argocd --all --timeout=180s
+	kubectl wait --for=condition=Ready pod -n argocd -l app.kubernetes.io/part-of=argocd --timeout=180s
 
 argocd-apps:
 	@ARGOCD_REPO_URL="$(ARGOCD_REPO_URL)" ARGOCD_TARGET_REVISION="$(ARGOCD_TARGET_REVISION)" node scripts/argocd/render-apps.js | kubectl apply -f -
@@ -84,6 +93,7 @@ argocd:
 	@node scripts/argocd/check.js
 
 argocd-up:
+	kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=180s
 	kubectl -n argocd port-forward svc/argocd-server 18080:443
 
 argocd-password:

@@ -53,10 +53,12 @@ This follows the standard Argo CD local install shape:
 
 ```sh
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-The lab target also waits for Argo CD deployments to become available.
+The lab uses server-side apply because the Argo CD CRDs are large enough to hit the client-side `last-applied-configuration` annotation limit.
+
+The lab target also waits for Argo CD deployments and pods to become ready.
 
 ## Register Lab Apps
 
@@ -105,6 +107,60 @@ Login:
 - password: output from `make argocd-password`
 
 The browser may warn because this is a local self-signed TLS endpoint.
+
+## Common Errors
+
+### k3d cluster already exists
+
+If the local cluster already exists, `make bootstrap` reuses it and reapplies the baseline namespaces.
+
+To start from zero:
+
+```sh
+make reset
+make bootstrap
+```
+
+### CRD annotation too long
+
+If you see:
+
+```text
+metadata.annotations: Too long
+```
+
+rerun:
+
+```sh
+make install-argocd
+```
+
+The Makefile uses `kubectl apply --server-side` so Argo CD's large CRDs do not need the client-side last-applied annotation.
+
+### Password secret not found
+
+If `make argocd-password` cannot find `argocd-initial-admin-secret`, Argo CD is not installed or is still starting.
+
+Check:
+
+```sh
+kubectl get pods -n argocd
+```
+
+Then retry:
+
+```sh
+make argocd-password
+```
+
+### Port-forward pod is pending
+
+If `make argocd-up` says the pod is `Pending`, wait for the server deployment:
+
+```sh
+kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=180s
+make argocd-up
+```
 
 ## Test The Argo CD Flow
 
