@@ -66,6 +66,22 @@ Helm installs packaged Kubernetes software. This lab uses it to install Kyverno 
 - Installer: `installer/helm.installer.sh`
 - Check: `helm version`
 
+### Argo CD CLI
+
+The Argo CD CLI talks to the Argo CD API server after Argo CD is installed in the cluster. It is a local command-line tool, not the in-cluster controller.
+
+- Used by: optional GitOps inspection and login workflows
+- Installer: `installer/argocd.installer.sh`
+- Check: `argocd version --client`
+
+`make install-tools` checks or installs this CLI. `make install-argocd` installs the Argo CD controller, API server, repo server, and UI into Kubernetes.
+
+Install targets are split by where the software runs:
+
+- `make install` or `make install-tools`: local workstation command-line tools
+- `make install-addons`: in-cluster platform add-ons after `make bootstrap`
+- `make install-kyverno`, `make install-observability`, `make install-argocd`: one add-on at a time for teaching
+
 ### Node.js
 
 Node.js runs the small local helper scripts. The lab uses dependency-free Node scripts so learners do not need an npm project or frontend build step.

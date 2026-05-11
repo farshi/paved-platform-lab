@@ -14,6 +14,8 @@ sh "$ROOT_DIR/installer/node.installer.sh"
 sh "$ROOT_DIR/installer/jq.installer.sh"
 sh "$ROOT_DIR/installer/yq.installer.sh"
 sh "$ROOT_DIR/installer/kyverno.installer.sh"
+sh "$ROOT_DIR/installer/argocd.installer.sh"
 
 echo "install: done"
 echo "next: make bootstrap"
+echo "then: make install-addons"

@@ -106,6 +106,69 @@ Login:
 
 The browser may warn because this is a local self-signed TLS endpoint.
 
+## Test The Argo CD Flow
+
+Use this as the smoke test after changing the GitOps files.
+
+1. Check the generated `Application` manifests without touching the cluster:
+
+```sh
+node scripts/argocd/render-apps.js
+```
+
+Expected:
+
+- four `Application` manifests
+- `repoURL: "https://github.com/farshi/paved-platform-lab.git"`
+- paths from `argocd/apps.json`
+
+2. Start the cluster and install local platform add-ons:
+
+```sh
+make bootstrap
+make install-addons
+```
+
+This installs Kyverno, observability, Argo CD, and registers the Argo CD apps.
+
+3. Check Argo CD objects:
+
+```sh
+kubectl get pods -n argocd
+kubectl get applications -n argocd
+make argocd
+```
+
+Expected:
+
+- Argo CD pods are `Running`
+- four `Application` resources exist
+- each app has a sync and health status
+
+4. Open the UI:
+
+```sh
+make argocd-password
+make argocd-up
+```
+
+Open `https://localhost:18080`, then login as `admin`.
+
+5. Show drift and recovery:
+
+```sh
+kubectl scale deployment demo-api -n tenant-a --replicas=1
+make argocd
+```
+
+Expected: Argo CD shows drift/out-of-sync for the tenant app. Sync from the UI or CLI, then check:
+
+```sh
+kubectl get deployment demo-api -n tenant-a
+```
+
+Expected: desired state is restored from Git.
+
 ## Smooth Demo
 
 1. Start with the existing direct path:

@@ -9,11 +9,13 @@ IMAGE_TAG ?= 0.1.0
 ARGOCD_REPO_URL ?= https://github.com/farshi/paved-platform-lab.git
 ARGOCD_TARGET_REVISION ?= main
 
-.PHONY: help install bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-up argocd-password validate validate-policies deploy break rollback check-app evidence observability tools-up
+.PHONY: help install install-tools install-addons bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-up argocd-password validate validate-policies deploy break rollback check-app evidence observability tools-up
 
 help:
 	@echo "Targets:"
-	@echo "  make install        Install/check local lab tools"
+	@echo "  make install        Alias for make install-tools"
+	@echo "  make install-tools  Install/check local command-line tools"
+	@echo "  make install-addons Install in-cluster platform add-ons"
 	@echo "  make bootstrap      Create local k3d cluster"
 	@echo "  make reset          Delete local k3d cluster"
 	@echo "  make build          Build and import the demo API image"
@@ -34,8 +36,12 @@ help:
 	@echo "  make observability  Install or inspect observability stack"
 	@echo "  make tools-up       Open local portal and port-forward Grafana, Prometheus, and demo API"
 
-install:
+install: install-tools
+
+install-tools:
 	sh installer/all.installer.sh
+
+install-addons: install-kyverno install-observability install-argocd argocd-apps
 
 bootstrap:
 	k3d cluster create $(CLUSTER_NAME) $(K3D_ARGS)

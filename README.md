@@ -77,10 +77,13 @@ Platform operator questions and answers: `docs/questions/platform-operator.md`
 6. Break runtime and run rollback.
 7. Install observability and show logs, metrics, traces, and SLO examples.
 8. Open the local tool portal for Grafana, Prometheus, and the demo API.
+9. Install Argo CD and register the GitOps applications.
 
 ## Make Targets
 
 - `make install`
+- `make install-tools`
+- `make install-addons`
 - `make bootstrap`
 - `make build`
 - `make install-kyverno`
@@ -94,6 +97,14 @@ Platform operator questions and answers: `docs/questions/platform-operator.md`
 - `make install-observability`
 - `make observability`
 - `make tools-up`
+- `make install-argocd`
+- `make argocd-apps`
+- `make argocd`
+- `make argocd-up`
+
+`make install` is an alias for `make install-tools`. It checks local command-line tools, including the Argo CD CLI. It does not install anything into Kubernetes.
+
+After `make bootstrap`, use `make install-addons` to install the in-cluster platform add-ons: Kyverno, observability, Argo CD, and Argo CD app registration. You can still run the individual add-on targets when teaching each layer step by step.
 
 ## Next Step
 
@@ -103,3 +114,4 @@ Run the lab in this order:
 - `labs/02-policy` - install Kyverno and prove pass/fail admission behavior
 - `labs/03-rollback` - deploy, check health, block bad change, roll back, and collect evidence
 - `observability/README.md` - install observability, verify signals, and open local tools
+- `docs/argocd-gitops.md` - install Argo CD, register GitOps apps, and inspect sync health
