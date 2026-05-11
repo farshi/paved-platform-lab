@@ -21,16 +21,16 @@ Git change
 
 Argo CD runs inside Kubernetes. It cannot read your local unpushed working tree. It needs a reachable Git repository URL.
 
-Set:
+This lab defaults to the public repository:
 
-```sh
-ARGOCD_REPO_URL=https://github.com/<owner>/<repo>.git
+```text
+https://github.com/farshi/paved-platform-lab.git
 ```
 
 Then register apps:
 
 ```sh
-ARGOCD_REPO_URL=https://github.com/<owner>/<repo>.git make argocd-apps
+make argocd-apps
 ```
 
 `ARGOCD_TARGET_REVISION` defaults to `main`.
@@ -51,7 +51,7 @@ Then add GitOps:
 
 ```sh
 make install-argocd
-ARGOCD_REPO_URL=https://github.com/<owner>/<repo>.git make argocd-apps
+make argocd-apps
 make argocd
 make argocd-password
 make argocd-up

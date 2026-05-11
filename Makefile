@@ -6,7 +6,7 @@ NAMESPACE_A ?= tenant-a
 NAMESPACE_B ?= tenant-b
 IMAGE_REPO ?= ghcr.io/rfar/platform-guardrails-lab/demo-api
 IMAGE_TAG ?= 0.1.0
-ARGOCD_REPO_URL ?=
+ARGOCD_REPO_URL ?= https://github.com/farshi/paved-platform-lab.git
 ARGOCD_TARGET_REVISION ?= main
 
 .PHONY: help install bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-up argocd-password validate validate-policies deploy break rollback check-app evidence observability tools-up

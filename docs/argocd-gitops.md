@@ -62,10 +62,16 @@ The lab target also waits for Argo CD deployments to become available.
 
 Argo CD runs inside the cluster. It cannot read an unpushed local working tree. It needs a Git URL.
 
+This lab defaults to the public repository:
+
+```text
+https://github.com/farshi/paved-platform-lab.git
+```
+
 Run:
 
 ```sh
-ARGOCD_REPO_URL=https://github.com/<owner>/<repo>.git make argocd-apps
+make argocd-apps
 ```
 
 Optional:
@@ -124,7 +130,7 @@ make install-argocd
 4. Register apps:
 
 ```sh
-ARGOCD_REPO_URL=https://github.com/<owner>/<repo>.git make argocd-apps
+make argocd-apps
 ```
 
 5. Inspect:

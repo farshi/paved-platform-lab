@@ -3,12 +3,13 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "../..");
 const apps = JSON.parse(fs.readFileSync(path.join(root, "argocd/apps.json"), "utf8"));
-const repoUrl = process.env.ARGOCD_REPO_URL || "";
+const defaultRepoUrl = "https://github.com/farshi/paved-platform-lab.git";
+const repoUrl = process.env.ARGOCD_REPO_URL || defaultRepoUrl;
 const targetRevision = process.env.ARGOCD_TARGET_REVISION || "main";
 
 if (!repoUrl) {
   console.error("ARGOCD_REPO_URL is required.");
-  console.error("Example: ARGOCD_REPO_URL=https://github.com/<owner>/<repo>.git make argocd-apps");
+  console.error(`Example: ARGOCD_REPO_URL=${defaultRepoUrl} make argocd-apps`);
   process.exit(1);
 }
 
