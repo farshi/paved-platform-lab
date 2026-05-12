@@ -29,11 +29,13 @@ Keep each step short. One idea per file. One practical behavior per lesson.
 
 Use as the foundation track. It teaches the path from code to container image, pod, cluster, control plane, registry, deployment, service, ingress, RBAC, nodes, scheduler, and traffic flow.
 
-Next improvement: connect each concept to this repo's local lab where possible.
+Track files: [learning/k8s-gcp-basics/README.md](learning/k8s-gcp-basics/README.md)
 
 ### `ci-cd-basics`
 
-Create as the next track. It should teach:
+Track files: [learning/ci-cd-basics/README.md](learning/ci-cd-basics/README.md)
+
+It teaches:
 
 - Continuous Integration as mainline integration plus automated self-testing build.
 - Why delayed integration creates delayed risk.
@@ -46,7 +48,9 @@ Create as the next track. It should teach:
 
 ### Platform Self-Service
 
-Create as a mentoring track around platform engineering:
+Track files: [learning/platform-self-service/README.md](learning/platform-self-service/README.md)
+
+It teaches:
 
 - Paved roads: teams move quickly because the safe path is the easy path.
 - Guardrails: policy and automation run before mistakes reach production.
@@ -80,22 +84,23 @@ Use these as internal phrasing anchors. Adapt them to the lesson; do not overquo
 ## Suggested File Layout
 
 ```text
-ci-cd-basics/
+learning/
   README.md
-  step-01-continuous-integration.md
-  step-02-self-testing-build.md
-  step-03-pipeline-as-code.md
-  step-04-container-build-and-scan.md
-  step-05-deploy-vs-release.md
-  step-06-rollback.md
-  step-07-progressive-delivery.md
-  step-08-telemetry-gates.md
-
-platform-self-service/
-  README.md
-  step-01-paved-road.md
-  step-02-guardrails.md
-  step-03-tenant-onboarding.md
-  step-04-variable-governance.md
-  step-05-adoption-checks.md
+  k8s-gcp-basics/
+    README.md
+    step-01-workload-basics.md
+    step-02-manifests-policies-crds.md
+    step-03-gitops-observability-cloud.md
+  ci-cd-basics/
+    README.md
+    step-01-ci-self-testing-build.md
+    step-02-pipeline-as-code-deploy-release.md
+    step-03-rollback-telemetry-gates.md
+  platform-self-service/
+    README.md
+    step-01-paved-road.md
+    step-02-guardrails.md
+    step-03-tenant-onboarding.md
+    step-04-variable-governance.md
+    step-05-adoption-checks.md
 ```

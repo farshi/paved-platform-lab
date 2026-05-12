@@ -117,7 +117,7 @@ Installer scripts live under `installer/*.installer.sh`.
 ### 12. Learning Tracks
 
 - [x] Treat `k8s-gcp-basics` as the first mentoring track
-- [ ] Add `ci-cd-basics` as the next mentoring track
+- [x] Add `ci-cd-basics` as the next mentoring track
 - [ ] Add a platform self-service track that explains paved roads, guardrails, and team autonomy
 - [ ] Add a DevOps best-practices track that shows better build, test, deploy, rollback, and feedback loops
 - [x] Keep every learning track step-based, plain-language, and tied to one runnable platform behavior

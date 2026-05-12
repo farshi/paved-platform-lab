@@ -130,11 +130,11 @@ Done when: SLO examples are concrete and demoable, not theoretical.
 
 Goal: turn the platform lab into mentoring material for teams.
 
-- [ ] Connect `k8s-gcp-basics` lessons back to repo examples, commands, and manifests.
-- [ ] Create `ci-cd-basics` with step-based docs for CI, self-testing builds, pipeline-as-code, deploy vs release, rollback, and telemetry gates.
-- [ ] Create `platform-self-service` with paved-road, guardrail, tenant onboarding, variable governance, and adoption-check lessons.
-- [ ] Use `docs/learning-docs.md` as the style and quality guide.
-- [ ] Keep every lesson practical: concept -> example -> best practice -> lab link.
+- [x] Connect `k8s-gcp-basics` lessons back to repo examples, commands, and manifests.
+- [x] Create `ci-cd-basics` with step-based docs for CI, self-testing builds, pipeline-as-code, deploy vs release, rollback, and telemetry gates.
+- [x] Create `platform-self-service` with paved-road, guardrail, tenant onboarding, variable governance, and adoption-check lessons.
+- [x] Use `docs/learning-docs.md` as the style and quality guide.
+- [x] Keep every lesson practical: concept -> example -> best practice -> lab link.
 
 Done when: a team can use the docs to learn the platform path without platform-team hand-holding.
 

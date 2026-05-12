@@ -86,6 +86,60 @@ Applications are generated from `argocd/apps.json`.
 
 Renderer script: `scripts/argocd/render-apps.js`.
 
+## Argo CD Helper Commands
+
+### Render Applications
+
+```sh
+node scripts/argocd/render-apps.js
+```
+
+This reads `argocd/apps.json` and prints Argo CD `Application` YAML to stdout. It does not change the cluster.
+
+Use it when you want to inspect what the repo would register with Argo CD.
+
+### Register Applications
+
+```sh
+node scripts/argocd/render-apps.js | kubectl apply -f -
+```
+
+This sends the rendered `Application` YAML to the Kubernetes API. It creates or updates the Argo CD apps in the `argocd` namespace.
+
+The make target wraps the same flow:
+
+```sh
+make argocd-apps
+```
+
+### Sync One Application
+
+```sh
+kubectl patch application platform-guardrails-policies -n argocd --type merge -p '{"operation":{"sync":{}}}'
+```
+
+This asks Argo CD to sync one app. Use this when `kubectl get applications -n argocd` shows a specific app as `OutOfSync`.
+
+Watch the result:
+
+```sh
+kubectl get application platform-guardrails-policies -n argocd -w
+```
+
+### Sync The Tenant Demo App
+
+```sh
+make argocd-sync
+```
+
+This runs `scripts/argocd/sync.js`. By default it syncs `platform-guardrails-tenant-a`, then waits for the `demo-api` Deployment to return to the Git desired state.
+
+Target a different app:
+
+```sh
+ARGOCD_APP=platform-guardrails-policies make argocd-sync
+```
+
 ## Open UI
 
 Run:

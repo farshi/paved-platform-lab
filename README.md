@@ -50,6 +50,8 @@ Daily kubectl practice guide: `docs/kubectl-daily-commands.md`
 
 Guided runbooks: `docs/runbooks/README.md`
 
+Learning tracks: `docs/learning/README.md`
+
 Platform operator questions and answers: `docs/questions/platform-operator.md`
 
 ## Repo Map
@@ -57,6 +59,7 @@ Platform operator questions and answers: `docs/questions/platform-operator.md`
 - `templates/service` - service scaffold for new teams
 - `policies/kyverno` - guardrails and policy examples
 - `docs` - architecture, runbooks, questions, and decisions
+- `docs/learning` - mentoring tracks for Kubernetes, CI/CD, and platform self-service
 - `services/demo-api` - the sample API service
 - `examples/tenant-a` - working tenant example
 - `examples/tenant-b` - second tenant example

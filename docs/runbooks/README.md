@@ -13,4 +13,6 @@ API platform risk map: ([../api-platform-controls.md](../api-platform-controls.m
 
 SLI, SLO, p95 latency, error budget, and burn rate definitions live in ([dashboard-demo.md](dashboard-demo.md)). Start there before showing Grafana panels.
 
+Learning tracks for team mentoring live in ([../learning/README.md](../learning/README.md)).
+
 These are written for live learning sessions. They also work as a personal rehearsal path when explaining the project.
