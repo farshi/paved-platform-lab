@@ -1,8 +1,16 @@
 const cp = require("child_process");
 
 const ROOT = "/Users/rfar/dev/platform-guardrails-lab";
+const GREEN = "\x1b[32m";
+const RESET = "\x1b[0m";
+
+function show(cmd, args) {
+  const rendered = [cmd, ...args].map((arg) => (/[\s"'{}]/.test(arg) ? JSON.stringify(arg) : arg)).join(" ");
+  console.log(`${GREEN}$ ${rendered}${RESET}`);
+}
 
 function run(cmd, args, options = {}) {
+  show(cmd, args);
   return cp.execFileSync(cmd, args, {
     cwd: ROOT,
     encoding: "utf8",
@@ -70,6 +78,13 @@ async function main() {
   console.log("waiting 10s for second scrape window...");
   await sleep(10000);
   console.log("opening local Prometheus port-forward on 19093...");
+  show("kubectl", [
+    "port-forward",
+    "-n",
+    "observability",
+    "svc/kube-prometheus-stack-prometheus",
+    "19093:9090",
+  ]);
   const portForward = cp.spawn(
     "kubectl",
     [

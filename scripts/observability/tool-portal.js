@@ -5,6 +5,15 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "../..");
 const PORT = Number(process.env.PORTAL_PORT || 18000);
+const COLOR = {
+  green: "\x1b[32m",
+  cyan: "\x1b[36m",
+  yellow: "\x1b[33m",
+  magenta: "\x1b[35m",
+  blue: "\x1b[34m",
+  red: "\x1b[31m",
+  reset: "\x1b[0m",
+};
 const promqlSamples = JSON.parse(fs.readFileSync(path.join(ROOT, "observability/promql-samples.json"), "utf8"));
 const trafficScenarios = JSON.parse(fs.readFileSync(path.join(ROOT, "observability/traffic-scenarios.json"), "utf8"));
 const guideFiles = [
@@ -12,6 +21,11 @@ const guideFiles = [
     title: "Start Here",
     path: "docs/runbooks/README.md",
     description: "Choose the right guided session.",
+  },
+  {
+    title: "Dashboard Demo",
+    path: "docs/runbooks/dashboard-demo.md",
+    description: "Drive terminal commands and dashboards together.",
   },
   {
     title: "Core Lab",
@@ -73,16 +87,33 @@ const forwards = [
 
 const children = [];
 
+function color(value, colorName) {
+  return `${COLOR[colorName]}${value}${COLOR.reset}`;
+}
+
+function writeLine(value, colorName = "green", stream = process.stdout) {
+  stream.write(`${color(value, colorName)}\n`);
+}
+
+function writeForwardChunk(forward, chunk, stream, colorName) {
+  const prefix = color(`[${forward.name}]`, colorName);
+  const lines = String(chunk).split(/\r?\n/);
+  for (const line of lines) {
+    if (!line) continue;
+    stream.write(`${prefix} ${color(line, colorName)}\n`);
+  }
+}
+
 function spawnKubectl(forward, args) {
   const child = cp.spawn("kubectl", args, {
     cwd: ROOT,
     stdio: ["ignore", "pipe", "pipe"],
   });
   child.stdout.on("data", (chunk) => {
-    process.stdout.write(`[${forward.name}] ${chunk}`);
+    writeForwardChunk(forward, chunk, process.stdout, "cyan");
   });
   child.stderr.on("data", (chunk) => {
-    process.stderr.write(`[${forward.name}] ${chunk}`);
+    writeForwardChunk(forward, chunk, process.stderr, "yellow");
   });
   children.push(child);
   return child;
@@ -99,7 +130,7 @@ function startForward(forward) {
       spawnKubectl(forward, forward.args);
       return;
     }
-    process.stderr.write(`[${forward.name}] not ready; skipping port-forward\n`);
+    writeLine(`[${forward.name}] not ready; skipping port-forward`, "red", process.stderr);
   });
 }
 
@@ -538,6 +569,11 @@ const page = `<!doctype html>
     <script>
       const tools = [
         {
+          name: "User Guide",
+          description: "Step through runbooks and questions with back and next controls.",
+          url: "http://localhost:${PORT}/guide"
+        },
+        {
           name: "Grafana",
           description: "Dashboards for request rate, errors, and latency.",
           url: "http://localhost:3000/d/demo-api/demo-api?orgId=1&refresh=10s"
@@ -550,20 +586,12 @@ const page = `<!doctype html>
         {
           name: "Argo CD",
           description: "GitOps sync, health, and drift view for lab applications.",
-          url: "https://localhost:18080",
-          external: true,
-          externalTitle: "Open Argo CD Directly",
-          externalBody: "Argo CD uses self-signed HTTPS in this local lab, so browsers often block it inside the portal iframe. Open it in a new tab, accept the local certificate warning, then log in as admin. Get the password with make argocd-password."
+          url: "https://localhost:18080"
         },
         {
           name: "Traffic Lab",
           description: "Generate traffic, errors, and slow requests for dashboard practice.",
           url: "http://localhost:${PORT}/traffic-lab"
-        },
-        {
-          name: "User Guide",
-          description: "Step through runbooks and questions with back and next controls.",
-          url: "http://localhost:${PORT}/guide"
         },
         {
           name: "Demo API",
@@ -1200,10 +1228,10 @@ server.on("error", (error) => {
 
 server.listen(PORT, "127.0.0.1", () => {
   console.log("");
-  console.log(`portal: http://localhost:${PORT}`);
-  console.log("tools:");
-  for (const forward of forwards) console.log(`- ${forward.name}: ${forward.url}`);
+  writeLine(`portal: http://localhost:${PORT}`, "green");
+  writeLine("tools:", "magenta");
+  for (const forward of forwards) writeLine(`- ${forward.name}: ${forward.url}`, "cyan");
   console.log("");
-  console.log("Grafana login: admin / admin");
-  console.log("Stop with Ctrl-C.");
+  writeLine("Grafana login: admin / admin", "yellow");
+  writeLine("Stop with Ctrl-C.", "red");
 });

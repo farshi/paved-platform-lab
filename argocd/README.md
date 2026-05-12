@@ -69,3 +69,17 @@ Login:
 - password: output from `make argocd-password`
 
 This does not replace the original `kubectl apply` path. It shows how the same manifests can be reconciled through GitOps.
+
+Show drift and recovery:
+
+```sh
+make argocd-drift
+make argocd-sync
+make argocd
+```
+
+Expected result:
+
+- manual cluster drift is detected
+- Argo CD restores `tenant-a` from Git
+- `platform-guardrails-tenant-a` returns to `Synced` and `Healthy`

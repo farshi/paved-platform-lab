@@ -1,10 +1,18 @@
 const cp = require("child_process");
+const GREEN = "\x1b[32m";
+const RESET = "\x1b[0m";
 
 const attempts = Number(process.env.ARGOCD_PASSWORD_ATTEMPTS || 30);
 const delayMs = Number(process.env.ARGOCD_PASSWORD_DELAY_MS || 2000);
 
+function show(args) {
+  const rendered = args.map((arg) => (/[\s"'{}]/.test(arg) ? JSON.stringify(arg) : arg)).join(" ");
+  console.log(`${GREEN}$ kubectl ${rendered}${RESET}`);
+}
+
 function run(args) {
   try {
+    show(args);
     return cp.execFileSync("kubectl", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   } catch (error) {
     return "";

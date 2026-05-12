@@ -1,9 +1,16 @@
 #!/bin/sh
 set -eu
+GREEN='\033[32m'
+RESET='\033[0m'
+
+show() {
+  printf "${GREEN}$ %s${RESET}\n" "$*"
+}
 
 check_pass() {
   path="$1"
   printf 'pass: %s\n' "$path"
+  show "kubectl apply -k $path --dry-run=server"
   kubectl apply -k "$path" --dry-run=server >/dev/null
 }
 
@@ -12,6 +19,7 @@ check_fail() {
   policy="$2"
   tmp_file="$(mktemp)"
   printf 'fail: %s -> %s\n' "$path" "$policy"
+  show "kubectl apply -k $path --dry-run=server"
   if kubectl apply -k "$path" --dry-run=server >"$tmp_file" 2>&1; then
     cat "$tmp_file"
     rm -f "$tmp_file"

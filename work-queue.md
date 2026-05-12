@@ -168,11 +168,11 @@ Done when: the watcher detects the broken deploy and rolls back cleanly.
 
 Goal: show the common delivery model with one implementation lane: Argo CD.
 
-- [ ] Install Argo CD locally.
+- [x] Install Argo CD locally.
 - [x] Add an Argo CD Application for tenant overlays.
 - [x] Add an Argo CD Application for observability manifests.
-- [ ] Show drift detection.
-- [ ] Show sync and rollback from Git.
+- [x] Show drift detection.
+- [x] Show sync and rollback from Git.
 - [x] Keep the docs clear that this is Argo CD, not GoCD.
 - [x] Keep this as GitOps proof, not a full enterprise deployment system.
 

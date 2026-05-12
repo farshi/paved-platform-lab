@@ -160,9 +160,11 @@ These actions call the port-forwarded demo API and help show why DevOps engineer
 User Guide renders Markdown from:
 
 - `docs/runbooks/README.md`
+- `docs/runbooks/dashboard-demo.md`
 - `docs/runbooks/core-lab.md`
 - `docs/runbooks/platform-as-a-service.md`
 - `docs/runbooks/platform-practices.md`
+- `docs/questions/kubernetes-argocd-basics.md`
 - `docs/questions/platform-operator.md`
 
 The guide has Start, Back, Next, and Done controls. Done state is stored in browser local storage.

@@ -182,10 +182,11 @@ Expected:
 
 ```sh
 make bootstrap
+make deploy
 make install-addons
 ```
 
-This installs Kyverno, observability, Argo CD, and registers the Argo CD apps.
+This creates the demo workload, installs Kyverno, observability, Argo CD, and registers the Argo CD apps. The drift demo needs `deployment/demo-api` to exist before it can scale it away from Git desired state.
 
 3. Check Argo CD objects:
 
@@ -213,17 +214,82 @@ Open `https://localhost:18080`, then login as `admin`.
 5. Show drift and recovery:
 
 ```sh
-kubectl scale deployment demo-api -n tenant-a --replicas=1
+make argocd-drift
 make argocd
 ```
 
-Expected: Argo CD shows drift/out-of-sync for the tenant app. Sync from the UI or CLI, then check:
+Expected: `demo-api` in `tenant-a` is manually scaled away from Git desired state, and Argo CD shows drift/out-of-sync for the tenant app.
+
+Sync from Git, then check:
+
+```sh
+make argocd-sync
+kubectl get deployment demo-api -n tenant-a
+```
+
+Expected: desired state is restored from Git.
+
+## Drift And Sync Demo
+
+Use this when explaining why GitOps matters.
+
+1. Make sure the app is managed by Argo CD:
+
+```sh
+make argocd-apps
+kubectl get applications -n argocd
+make deploy
+```
+
+2. Create live drift:
+
+```sh
+make argocd-drift
+```
+
+The target changes live cluster state by scaling `deployment/demo-api` in `tenant-a` to one replica. Git still says the desired state should be two replicas.
+
+3. Inspect drift:
+
+```sh
+make argocd
+kubectl get deployment demo-api -n tenant-a
+```
+
+Expected:
+
+- live deployment shows `1/1`
+- Argo CD tenant app becomes `OutOfSync` after refresh
+
+4. Restore from Git:
+
+In the UI, open `platform-guardrails-tenant-a` and press `Sync`.
+
+Or run:
+
+```sh
+make argocd-sync
+```
+
+5. Confirm recovery:
 
 ```sh
 kubectl get deployment demo-api -n tenant-a
 ```
 
-Expected: desired state is restored from Git.
+Expected:
+
+```text
+READY 2/2
+```
+
+Talking point:
+
+```text
+manual kubectl change -> drift
+Argo CD compares live state to Git
+Sync restores the approved desired state
+```
 
 ## Smooth Demo
 
