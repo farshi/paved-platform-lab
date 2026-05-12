@@ -9,4 +9,6 @@ Start here:
 3. ([platform-as-a-service.md](platform-as-a-service.md)) - end-to-end paved-road story
 4. ([platform-practices.md](platform-practices.md)) - API gateway and policy-shaped platform flow
 
+API platform risk map: ([../api-platform-controls.md](../api-platform-controls.md))
+
 These are written for live learning sessions. They also work as a personal rehearsal path when explaining the project.

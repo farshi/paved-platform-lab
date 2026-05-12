@@ -164,6 +164,7 @@ User Guide renders Markdown from:
 - `docs/runbooks/core-lab.md`
 - `docs/runbooks/platform-as-a-service.md`
 - `docs/runbooks/platform-practices.md`
+- `docs/api-platform-controls.md`
 - `docs/questions/kubernetes-argocd-basics.md`
 - `docs/questions/platform-operator.md`
 

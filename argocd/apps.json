@@ -12,6 +12,12 @@
     "description": "Tenant B workload, namespace, quota, limits, and RBAC."
   },
   {
+    "name": "platform-guardrails-api-platform",
+    "path": "examples/api-platform",
+    "namespace": "api-platform",
+    "description": "policy-shaped API platform config for proxy, auth, quota, spike arrest, and target standards."
+  },
+  {
     "name": "platform-guardrails-policies",
     "path": "policies/kyverno",
     "namespace": "kyverno",

@@ -10,7 +10,7 @@ IMAGE_TAG ?= 0.1.0
 ARGOCD_REPO_URL ?= https://github.com/farshi/paved-platform-lab.git
 ARGOCD_TARGET_REVISION ?= main
 
-.PHONY: help setup install install-tools install-addons bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-drift argocd-sync argocd-up argocd-password validate validate-policies deploy break rollback check-app evidence observability tools-up
+.PHONY: help setup install install-tools install-addons bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-drift argocd-sync argocd-up argocd-password validate validate-policies validate-api-platform deploy break rollback check-app evidence observability tools-up
 
 help:
 	@echo "Setup targets:"
@@ -32,6 +32,7 @@ help:
 	@echo "  make argocd-sync    Ask Argo CD to restore the tenant app from Git"
 	@echo "  make validate       Validate tenant manifests and bad manifest rejection"
 	@echo "  make validate-policies Validate focused policy pass/fail examples"
+	@echo "  make validate-api-platform Validate policy-shaped API platform example"
 	@echo "  make check-app      Check demo API health from inside the cluster"
 	@echo "  make break          Apply bad change"
 	@echo "  make rollback       Roll back the workload"
@@ -154,6 +155,10 @@ validate:
 validate-policies:
 	$(SHOW) 'sh scripts/validate-policy-examples.sh'
 	@sh scripts/validate-policy-examples.sh
+
+validate-api-platform:
+	$(SHOW) 'node scripts/validate-api-platform-examples.js'
+	@node scripts/validate-api-platform-examples.js
 
 deploy:
 	$(SHOW) 'kubectl apply -k examples/tenant-a'

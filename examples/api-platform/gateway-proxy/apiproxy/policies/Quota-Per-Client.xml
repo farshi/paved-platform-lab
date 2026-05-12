@@ -1,0 +1,6 @@
+<Quota name="Quota-Per-Client">
+  <Identifier ref="client_id"/>
+  <Allow count="1000"/>
+  <Interval>1</Interval>
+  <TimeUnit>hour</TimeUnit>
+</Quota>

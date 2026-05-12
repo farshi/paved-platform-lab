@@ -155,7 +155,7 @@ In this lab, Argo CD should manage:
 - tenant overlays in `examples/tenant-a` and `examples/tenant-b`
 - Kyverno policies in `policies/kyverno`
 - observability manifests in `observability`
-- future policy-shaped gateway/proxy config
+- policy-shaped gateway/proxy config in `examples/api-platform`
 
 What to say:
 
@@ -184,22 +184,38 @@ What this repo can safely model:
 - rollback and drift detection
 - identity and access API operational risk
 
-What to add next for gateway relevance:
+What exists now for gateway relevance:
 
 ```text
-api-platform/
-  proxies/
-    login-proxy/
-    token-proxy/
-  policies/
-    require-jwt.yaml
-    require-quota.yaml
-    require-cors.yaml
-  argocd/
-    application.yaml
+examples/api-platform/
+  gateway-proxy/apiproxy/
+    proxies/default.xml
+    policies/Verify-JWT.xml
+    policies/OAuthV2-Verify-Access-Token.xml
+    policies/Quota-Per-Client.xml
+    policies/Spike-Arrest.xml
+    targets/default.xml
+  api-proxy-config.yaml
 ```
 
-This would be policy-shaped without pretending to run full gateway locally.
+This is policy-shaped without pretending to run full gateway locally.
+
+Run:
+
+```sh
+make validate-api-platform
+node scripts/argocd/render-apps.js
+```
+
+What to show:
+
+- local config validation catches missing API platform controls
+- Argo CD can manage the Kubernetes representation of approved API platform config
+- the actual gateway runtime boundary stays explicit
+
+Risk mapping:
+
+- `docs/api-platform-controls.md`
 
 ### 27-30 minutes: Close with leadership angle
 
@@ -251,3 +267,4 @@ I would not force a full gateway hybrid install into a tiny k3d demo. It would d
 - gateway hybrid overview: https://cloud.google.com/gateway/docs/hybrid/latest/what-is-hybrid
 - gateway Operator for Kubernetes overview: https://cloud.google.com/gateway/docs/api-platform/gateway-kubernetes/gateway-apim-operator-overview
 - gateway hybrid supported platforms: https://cloud.google.com/gateway/docs/hybrid/supported-platforms
+- Local risk map: `docs/api-platform-controls.md`

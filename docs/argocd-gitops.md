@@ -174,7 +174,7 @@ node scripts/argocd/render-apps.js
 
 Expected:
 
-- four `Application` manifests
+- five `Application` manifests
 - `repoURL: "https://github.com/farshi/paved-platform-lab.git"`
 - paths from `argocd/apps.json`
 
@@ -199,7 +199,7 @@ make argocd
 Expected:
 
 - Argo CD pods are `Running`
-- four `Application` resources exist
+- five `Application` resources exist
 - each app has a sync and health status
 
 4. Open the UI:

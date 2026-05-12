@@ -1,0 +1,11 @@
+<APIProxy name="orders-v1">
+  <DisplayName>orders-v1</DisplayName>
+  <Description>policy-shaped local example for platform guardrails learning.</Description>
+  <BasePaths>/orders/v1</BasePaths>
+  <ProxyEndpoints>
+    <ProxyEndpoint>default</ProxyEndpoint>
+  </ProxyEndpoints>
+  <TargetEndpoints>
+    <TargetEndpoint>default</TargetEndpoint>
+  </TargetEndpoints>
+</APIProxy>

@@ -1,0 +1,4 @@
+<SpikeArrest name="Spike-Arrest">
+  <Identifier ref="client_id"/>
+  <Rate>30ps</Rate>
+</SpikeArrest>

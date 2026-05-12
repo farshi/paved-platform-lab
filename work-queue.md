@@ -182,11 +182,11 @@ Done when: user can explain Git -> Argo CD -> Kubernetes -> policy -> telemetry 
 
 Goal: make the lab directly relevant to an platform practices learning path.
 
-- [ ] Add policy-shaped service interface examples without pretending to run full gateway locally.
-- [ ] Add policy checks for JWT/OAuth, quota, spike arrest, and target standards.
-- [ ] Add a GitOps flow for API platform config.
-- [ ] Add docs mapping API platform risks to platform controls.
-- [ ] Keep official gateway local development and hybrid install boundaries clear.
+- [x] Add policy-shaped service interface examples without pretending to run full gateway locally.
+- [x] Add policy checks for JWT/OAuth, quota, spike arrest, and target standards.
+- [x] Add a GitOps flow for API platform config.
+- [x] Add docs mapping API platform risks to platform controls.
+- [x] Keep official gateway local development and hybrid install boundaries clear.
 
 Done when: the lab can explain how Kubernetes guardrails, GitOps, and observability map to self-service platform operations.
 

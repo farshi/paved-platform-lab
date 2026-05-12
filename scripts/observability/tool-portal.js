@@ -43,6 +43,11 @@ const guideFiles = [
     description: "Map the platform model to API gateway and policy-shaped work.",
   },
   {
+    title: "API Platform Controls",
+    path: "docs/api-platform-controls.md",
+    description: "Map API gateway risks to local platform controls.",
+  },
+  {
     title: "Kubernetes And Argo CD Basics",
     path: "docs/questions/kubernetes-argocd-basics.md",
     description: "Review namespaces, services, pods, nodes, CRDs, and Argo CD sync.",

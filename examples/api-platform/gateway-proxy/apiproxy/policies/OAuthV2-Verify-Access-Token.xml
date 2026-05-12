@@ -1,0 +1,3 @@
+<OAuthV2 name="OAuthV2-Verify-Access-Token">
+  <Operation>VerifyAccessToken</Operation>
+</OAuthV2>

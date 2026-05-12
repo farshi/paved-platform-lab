@@ -4,6 +4,16 @@ This directory shows two tenant overlays: `tenant-a` and `tenant-b`.
 
 A tenant is a team or application boundary. Each tenant gets its own Kubernetes namespace, permissions, resource guardrails, and copy of the shared `demo-api` workload.
 
+## API Platform Example
+
+`examples/api-platform` contains an policy-shaped config example. It does not run gateway locally. It shows how service interface config, auth policy, quota, spike arrest, and target standards can be validated and delivered through the same GitOps model.
+
+Run:
+
+```sh
+make validate-api-platform
+```
+
 ## How To Apply A Tenant
 
 ```sh
