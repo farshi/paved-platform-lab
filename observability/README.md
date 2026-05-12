@@ -121,6 +121,21 @@ Where to type it:
 
 The demo API exports metrics such as `http_requests_total` and `http_request_duration_seconds_bucket`.
 
+The Grafana dashboard has variables for demo SLO targets:
+
+- `Availability SLO %`
+- `Latency SLO %`
+- `Latency threshold seconds`
+- `Error budget %`
+- `Burn threshold`
+- `Demo window`
+
+Use these as demo controls. They do not change the app. They change how the dashboard compares the measured SLI against the target.
+
+The demo API ServiceMonitor scrapes every 5s. The dashboard defaults to a 30s demo window for request, error, availability, latency-SLI, and burn-rate panels so Traffic Lab actions are visible after the next scrape or two. It keeps p95 latency on a 10m bucket window because sparse local histogram traffic can make short `histogram_quantile` windows noisy.
+
+Prometheus classic histogram buckets are cumulative, so bucket values must stay non-decreasing through `+Inf`. If Prometheus shows a monotonicity info message right after restarts or very sparse traffic, generate traffic for another scrape window and rerun the query.
+
 The sample query source of truth is `observability/promql-samples.json`. It stores each sample's title, description, and query text.
 
 To use the samples in the UI:

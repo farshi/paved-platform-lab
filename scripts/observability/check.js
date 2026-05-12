@@ -121,7 +121,7 @@ async function main() {
       ["error_total", 'sum(http_requests_total{service="demo-api",status=~"5.."})'],
       [
         "latency_p95",
-        'histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service="demo-api"}[5m])) by (le))',
+        'histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{service="demo-api"}[10m])))',
       ],
     ];
 
@@ -131,6 +131,12 @@ async function main() {
         ? result.data.result[0].value[1]
         : "no-data";
       console.log(`${name}=${value}`);
+      if (result.warnings && result.warnings.length) {
+        console.log(`${name}_warnings=${result.warnings.join(" | ")}`);
+      }
+      if (result.infos && result.infos.length) {
+        console.log(`${name}_infos=${result.infos.join(" | ")}`);
+      }
     }
   } finally {
     portForward.kill("SIGTERM");

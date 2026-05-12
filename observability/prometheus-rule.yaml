@@ -9,17 +9,22 @@ spec:
   groups:
     - name: demo-api.slo
       rules:
-        - alert: DemoApiHighErrorRate
+        - alert: DemoApiFastBurnErrorBudget
           expr: |
             (
               sum(rate(http_requests_total{service="demo-api",status=~"5.."}[5m]))
               /
               sum(rate(http_requests_total{service="demo-api"}[5m]))
-            ) > 0.01
+            ) > 0.02
+            and
+            (
+              sum(rate(http_requests_total{service="demo-api",status=~"5.."}[1h]))
+              /
+              sum(rate(http_requests_total{service="demo-api"}[1h]))
+            ) > 0.02
           for: 5m
           labels:
             severity: warning
           annotations:
-            summary: Demo API error rate is above 1 percent.
-            description: The sample API is exceeding its simple error budget example.
-
+            summary: Demo API is burning error budget faster than the demo SLO allows.
+            description: The 5xx rate is above 2 percent on both 5m and 1h windows, which is 2x the 1 percent demo error budget.

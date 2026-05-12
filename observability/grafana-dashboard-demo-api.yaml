@@ -11,45 +11,190 @@ data:
       "uid": "demo-api",
       "title": "Demo API",
       "schemaVersion": 39,
-      "version": 1,
+      "version": 2,
+      "refresh": "5s",
       "time": {
-        "from": "now-15m",
+        "from": "now-10m",
         "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "demo_window",
+            "label": "Demo window",
+            "type": "custom",
+            "query": "30s,1m,2m",
+            "current": { "text": "30s", "value": "30s" },
+            "hide": 0
+          },
+          {
+            "name": "availability_slo_percent",
+            "label": "Availability SLO %",
+            "type": "custom",
+            "query": "90,95,99",
+            "current": { "text": "95", "value": "95" },
+            "hide": 0
+          },
+          {
+            "name": "latency_slo_percent",
+            "label": "Latency SLO %",
+            "type": "custom",
+            "query": "80,90,95",
+            "current": { "text": "95", "value": "95" },
+            "hide": 0
+          },
+          {
+            "name": "latency_threshold_seconds",
+            "label": "Latency threshold seconds",
+            "type": "custom",
+            "query": "0.25,0.5,0.75,1",
+            "current": { "text": "0.5", "value": "0.5" },
+            "hide": 0
+          },
+          {
+            "name": "error_budget_percent",
+            "label": "Error budget %",
+            "type": "custom",
+            "query": "1,5,10",
+            "current": { "text": "5", "value": "5" },
+            "hide": 0
+          },
+          {
+            "name": "burn_threshold",
+            "label": "Burn threshold",
+            "type": "custom",
+            "query": "1,2,5",
+            "current": { "text": "2", "value": "2" },
+            "hide": 0
+          }
+        ]
       },
       "panels": [
         {
           "type": "timeseries",
           "title": "Request Rate",
-          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{service=\"demo-api\"}[5m]))",
+              "expr": "sum(rate(http_requests_total{service=\"demo-api\"}[$demo_window]))",
               "legendFormat": "requests/sec"
             }
           ]
         },
         {
-          "type": "timeseries",
-          "title": "Error Rate",
-          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "type": "stat",
+          "title": "5xx Errors In Demo Window",
+          "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 0
+            }
+          },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[5m]))",
-              "legendFormat": "errors/sec"
+              "expr": "sum(increase(http_requests_total{service=\"demo-api\",status=~\"5..\"}[$demo_window]))",
+              "legendFormat": "5xx"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Error Percentage",
+          "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100
+            }
+          },
+          "targets": [
+            {
+              "expr": "100 * (sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"demo-api\"}[$demo_window])))",
+              "legendFormat": "5xx %"
+            },
+            {
+              "expr": "${error_budget_percent}",
+              "legendFormat": "error budget %"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Availability SLI vs SLO",
+          "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100
+            }
+          },
+          "targets": [
+            {
+              "expr": "100 * (sum(rate(http_requests_total{service=\"demo-api\",status!~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"demo-api\"}[$demo_window])))",
+              "legendFormat": "availability SLI"
+            },
+            {
+              "expr": "${availability_slo_percent}",
+              "legendFormat": "demo SLO"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Latency SLI vs SLO",
+          "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100
+            }
+          },
+          "targets": [
+            {
+              "expr": "100 * (sum(rate(http_request_duration_seconds_bucket{service=\"demo-api\",le=\"${latency_threshold_seconds}\"}[$demo_window])) / sum(rate(http_request_duration_seconds_count{service=\"demo-api\"}[$demo_window])))",
+              "legendFormat": "under ${latency_threshold_seconds}s SLI"
+            },
+            {
+              "expr": "${latency_slo_percent}",
+              "legendFormat": "demo SLO"
             }
           ]
         },
         {
           "type": "timeseries",
           "title": "Latency P95",
-          "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
+          "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{service=\"demo-api\"}[5m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{service=\"demo-api\"}[10m])))",
               "legendFormat": "p95"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Error Budget Burn",
+          "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "min": 0
+            }
+          },
+          "targets": [
+            {
+              "expr": "(100 * (sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"demo-api\"}[$demo_window])))) / ${error_budget_percent}",
+              "legendFormat": "live burn"
+            },
+            {
+              "expr": "${burn_threshold}",
+              "legendFormat": "burn threshold"
             }
           ]
         }
       ]
     }
-

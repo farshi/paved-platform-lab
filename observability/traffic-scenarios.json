@@ -6,8 +6,8 @@
     "watch": "Grafana Request Rate should rise. Prometheus request-rate PromQL should return a larger value after the next scrape.",
     "button": "Run normal traffic",
     "steps": [
-      { "path": "/", "count": 12, "delayMs": 100 },
-      { "path": "/healthz", "count": 8, "delayMs": 100 }
+      { "path": "/", "count": 80, "delayMs": 10 },
+      { "path": "/healthz", "count": 40, "delayMs": 10 }
     ]
   },
   {
@@ -17,7 +17,7 @@
     "watch": "Grafana Error Rate should rise. Prometheus 5xx and error-percentage queries should move after the next scrape.",
     "button": "Create 500 errors",
     "steps": [
-      { "path": "/fail", "count": 12, "delayMs": 120 }
+      { "path": "/fail", "count": 250, "delayMs": 10 }
     ]
   },
   {
@@ -27,7 +27,7 @@
     "watch": "Grafana Latency P95 should rise. Prometheus p95 latency by namespace should return a higher value after the next scrape.",
     "button": "Create slow requests",
     "steps": [
-      { "path": "/slow?seconds=0.3", "count": 10, "delayMs": 80 }
+      { "path": "/slow?seconds=0.8", "count": 60, "delayMs": 10 }
     ]
   },
   {
@@ -37,10 +37,10 @@
     "watch": "Request rate, 5xx error rate, and p95 latency can all move. This is the scenario closest to a real triage conversation.",
     "button": "Run mixed incident",
     "steps": [
-      { "path": "/", "count": 10, "delayMs": 60 },
-      { "path": "/slow?seconds=0.2", "count": 8, "delayMs": 60 },
-      { "path": "/fail", "count": 8, "delayMs": 60 },
-      { "path": "/healthz", "count": 6, "delayMs": 60 }
+      { "path": "/", "count": 60, "delayMs": 10 },
+      { "path": "/slow?seconds=0.8", "count": 60, "delayMs": 10 },
+      { "path": "/fail", "count": 160, "delayMs": 10 },
+      { "path": "/healthz", "count": 40, "delayMs": 10 }
     ]
   }
 ]

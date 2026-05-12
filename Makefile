@@ -10,7 +10,7 @@ IMAGE_TAG ?= 0.1.0
 ARGOCD_REPO_URL ?= https://github.com/farshi/paved-platform-lab.git
 ARGOCD_TARGET_REVISION ?= main
 
-.PHONY: help setup install install-tools install-addons bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-drift argocd-sync argocd-up argocd-password validate validate-policies validate-api-platform deploy break rollback check-app evidence observability tools-up
+.PHONY: help setup install install-tools install-addons bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-drift argocd-sync argocd-up argocd-password validate validate-policies validate-api-platform deploy break rollback resilience check-app evidence observability tools-up
 
 help:
 	@echo "Setup targets:"
@@ -36,6 +36,7 @@ help:
 	@echo "  make check-app      Check demo API health from inside the cluster"
 	@echo "  make break          Apply bad change"
 	@echo "  make rollback       Roll back the workload"
+	@echo "  make resilience     Delete one demo API pod and watch Kubernetes self-heal"
 	@echo ""
 	@echo "Special targets:"
 	@echo "  make scaffold       Show service template path"
@@ -171,6 +172,10 @@ break:
 rollback:
 	$(SHOW) 'kubectl rollout undo deployment/demo-api -n tenant-a'
 	@kubectl rollout undo deployment/demo-api -n tenant-a
+
+resilience:
+	$(SHOW) 'node scripts/resilience-demo.js'
+	@node scripts/resilience-demo.js
 
 check-app:
 	$(SHOW) 'kubectl delete pod demo-api-check -n tenant-a --ignore-not-found'

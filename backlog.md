@@ -111,8 +111,8 @@ Installer scripts live under `installer/*.installer.sh`.
 - [x] Define one latency SLO for the sample API
 - [x] Define one error-rate SLO for the sample API
 - [x] Add one burn-rate alert example
-- [ ] Add one dashboard panel that shows SLI vs SLO
-- [ ] Keep SLO examples simple enough to explain in 5 minutes
+- [x] Add one dashboard panel that shows SLI vs SLO
+- [x] Keep SLO examples simple enough to explain in 5 minutes
 
 ### 12. Learning Tracks
 

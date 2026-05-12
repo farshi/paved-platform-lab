@@ -118,11 +118,11 @@ Done when: user can explain where metrics/traces come from in five minutes.
 
 Goal: show practical SLO thinking with minimal machinery.
 
-- [ ] Define one availability SLO.
-- [ ] Define one latency SLO.
-- [ ] Define one error-rate SLO.
-- [ ] Confirm burn-rate alert rule loads.
-- [ ] Confirm one dashboard panel shows SLI vs SLO.
+- [x] Define one availability SLO.
+- [x] Define one latency SLO.
+- [x] Define one error-rate SLO.
+- [x] Confirm burn-rate alert rule loads.
+- [x] Confirm one dashboard panel shows SLI vs SLO.
 
 Done when: SLO examples are concrete and demoable, not theoretical.
 
