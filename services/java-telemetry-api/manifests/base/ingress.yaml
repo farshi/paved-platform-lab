@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: java-telemetry-api
+  labels:
+    app.kubernetes.io/name: java-telemetry-api
+spec:
+  rules:
+    - host: java-telemetry-api.localtest.me
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: java-telemetry-api
+                port:
+                  name: http

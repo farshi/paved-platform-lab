@@ -23,6 +23,8 @@ Installer scripts live under `installer/*.installer.sh`.
 
 ## Backlog
 
+Next active item: **17. Rollback Watcher**. Items 15 and 16 have the demo story and Java telemetry app; the remaining operator-grade gap is automatic diagnosis and rollback.
+
 ### 1. Repo Skeleton
 
 - [x] Create `templates/service`
@@ -154,13 +156,13 @@ Installer scripts live under `installer/*.installer.sh`.
 
 ### 16. Tiny Java Telemetry Service
 
-- [ ] Add a minimal Java service for the runtime demo
-- [ ] Use SQLite for one simple persistent action
-- [ ] Add health, success, slow, and failing endpoints
-- [ ] Emit request count, latency, and error metrics
-- [ ] Add minimal OpenTelemetry wiring
-- [ ] Add a good deployment and one bad deployment
-- [ ] Use the bad deployment to burn SLO budget quickly
+- [x] Add a minimal Java service for the runtime demo
+- [x] Use SQLite for one simple persistent action
+- [x] Add health, success, slow, and failing endpoints
+- [x] Emit request count, latency, and error metrics
+- [x] Add minimal OpenTelemetry wiring
+- [x] Add a good deployment and one bad deployment
+- [x] Use the bad deployment to burn SLO budget quickly
 
 ### 17. Rollback Watcher
 

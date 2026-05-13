@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: java-telemetry-api-tenant-b
+  namespace: observability
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - tenant-a
+      - tenant-b
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: java-telemetry-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 5s

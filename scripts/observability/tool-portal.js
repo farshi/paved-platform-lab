@@ -16,6 +16,26 @@ const COLOR = {
 };
 const promqlSamples = JSON.parse(fs.readFileSync(path.join(ROOT, "observability/promql-samples.json"), "utf8"));
 const trafficScenarios = JSON.parse(fs.readFileSync(path.join(ROOT, "observability/traffic-scenarios.json"), "utf8"));
+const trafficTargets = [
+  {
+    id: "demo-api-tenant-a",
+    title: "Python Demo API",
+    app: "demo-api",
+    service: "demo-api",
+    namespace: "tenant-a",
+    tenant: "tenant-a",
+    description: "Python app - tenant-a",
+  },
+  {
+    id: "java-tenant-b",
+    title: "Java app",
+    app: "java-telemetry-api",
+    service: "java-telemetry-api",
+    namespace: "tenant-b",
+    tenant: "tenant-b",
+    description: "Java app - tenant-b",
+  },
+];
 const guideFiles = [
   {
     title: "Start Here",
@@ -83,7 +103,7 @@ const forwards = [
     url: "https://localhost:18080",
   },
   {
-    name: "Demo API",
+    name: "Python Demo API",
     local: 8080,
     args: ["port-forward", "-n", "tenant-a", "svc/demo-api", "8080:80"],
     url: "http://localhost:8080",
@@ -149,40 +169,40 @@ function stop() {
 process.on("SIGINT", stop);
 process.on("SIGTERM", stop);
 
-function callDemoApi(requestPath) {
-  return new Promise((resolve) => {
-    const startedAt = Date.now();
-    const clientRequest = http.request(
-      {
-        hostname: "127.0.0.1",
-        port: 8080,
-        path: requestPath,
-        method: "GET",
-        timeout: 5000,
-      },
-      (clientResponse) => {
-        clientResponse.resume();
-        clientResponse.on("end", () => {
-          resolve({
-            path: requestPath,
-            status: clientResponse.statusCode,
-            durationMs: Date.now() - startedAt,
-          });
-        });
-      },
-    );
-    clientRequest.on("timeout", () => {
-      clientRequest.destroy(new Error("timeout"));
+function callApp(target, requestPath, options = {}) {
+  const startedAt = Date.now();
+  const proxyPath = `/api/v1/namespaces/${target.namespace}/services/http:${target.service}:80/proxy${requestPath}`;
+  try {
+    const body = cp.execFileSync("kubectl", ["get", "--raw", proxyPath], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 7000,
     });
-    clientRequest.on("error", (error) => {
-      resolve({
-        path: requestPath,
-        error: error.message,
-        durationMs: Date.now() - startedAt,
-      });
-    });
-    clientRequest.end();
-  });
+    const result = {
+      app: target.app,
+      tenant: target.tenant,
+      path: requestPath,
+      status: 200,
+      durationMs: Date.now() - startedAt,
+    };
+    if (options.includeBody) result.body = body;
+    return result;
+  } catch (error) {
+    const output = [error.stdout, error.stderr]
+      .filter(Boolean)
+      .map((value) => value.toString())
+      .join("\n");
+    const statusMatch = output.match(/\b(4\d\d|5\d\d)\b/);
+    return {
+      app: target.app,
+      tenant: target.tenant,
+      path: requestPath,
+      status: statusMatch ? Number(statusMatch[1]) : "error",
+      error: statusMatch ? undefined : (error.message || "request failed"),
+      durationMs: Date.now() - startedAt,
+      body: options.includeBody ? output : undefined,
+    };
+  }
 }
 
 function sleep(ms) {
@@ -301,12 +321,12 @@ const renderedGuidePages = guideFiles.map((item) => ({
   html: renderMarkdown(item.markdown),
 }));
 
-async function runTrafficScenario(scenario) {
+async function runTrafficScenario(scenario, target) {
   const results = [];
   for (const step of scenario.steps) {
     const count = step.count || 1;
     for (let i = 0; i < count; i += 1) {
-      results.push(await callDemoApi(step.path));
+      results.push(callApp(target, step.path));
       if (step.delayMs) await sleep(step.delayMs);
     }
   }
@@ -316,6 +336,8 @@ async function runTrafficScenario(scenario) {
   const maxDurationMs = results.reduce((max, result) => Math.max(max, result.durationMs || 0), 0);
   return {
     scenario: scenario.title,
+    target: target.description,
+    grafana: `Service=${target.service}, Tenant=${target.tenant}, Demo window=30s`,
     requested: results.length,
     ok,
     errors,
@@ -323,6 +345,92 @@ async function runTrafficScenario(scenario) {
     maxDurationMs,
     results: results.slice(-12),
   };
+}
+
+function renderAppEndpointPage(target) {
+  const result = callApp(target, "/", { includeBody: true });
+  let parsedBody = null;
+  try {
+    parsedBody = result.body ? JSON.parse(result.body) : null;
+  } catch (_error) {
+    parsedBody = null;
+  }
+  const bodyText = parsedBody ? JSON.stringify(parsedBody, null, 2) : (result.body || "");
+  const message = parsedBody && parsedBody.message ? parsedBody.message : "Endpoint response";
+  const details = [
+    `App: ${target.title}`,
+    `Tenant: ${target.tenant}`,
+    `Service: ${target.service}`,
+    `Status: ${result.status}`,
+    `Duration: ${result.durationMs}ms`,
+  ];
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(target.title)} endpoint</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --text: #17202a;
+        --muted: #5c6670;
+        --line: #d7dde5;
+        --accent: #1f6feb;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 18px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      h1 { margin: 0; font-size: 22px; }
+      .message {
+        margin: 12px 0;
+        max-width: 860px;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+        margin: 14px 0;
+      }
+      .meta div, pre {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+      .meta div {
+        padding: 10px 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      pre {
+        margin: 0;
+        padding: 14px;
+        overflow: auto;
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>${escapeHtml(target.title)}</h1>
+    <div class="message">${escapeHtml(message)}</div>
+    <div class="meta">
+      ${details.map((item) => `<div>${escapeHtml(item)}</div>`).join("")}
+    </div>
+    <pre>${escapeHtml(bodyText)}</pre>
+  </body>
+</html>`;
 }
 
 const page = `<!doctype html>
@@ -373,6 +481,17 @@ const page = `<!doctype html>
         background: var(--panel);
         padding: 14px;
       }
+      .nav-section {
+        margin: 14px 4px 6px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+      .nav-section:first-child {
+        margin-top: 2px;
+      }
       nav button, a.card {
         width: 100%;
         display: block;
@@ -391,6 +510,10 @@ const page = `<!doctype html>
       }
       nav button.active {
         background: #eef5ff;
+      }
+      nav button.child {
+        margin-left: 10px;
+        width: calc(100% - 10px);
       }
       .workspace {
         display: grid;
@@ -574,44 +697,54 @@ const page = `<!doctype html>
     <script>
       const tools = [
         {
+          group: "Guides",
           name: "User Guide",
           description: "Step through runbooks and questions with back and next controls.",
           url: "http://localhost:${PORT}/guide"
         },
         {
+          group: "Apps",
+          name: "Python Demo API",
+          description: "Python app - tenant-a. Opens traffic actions for the baseline app.",
+          url: "http://localhost:${PORT}/traffic-lab?target=demo-api-tenant-a",
+          child: true
+        },
+        {
+          group: "Apps",
+          name: "Java app",
+          description: "Java app - tenant-b. Opens traffic actions for noisy-neighbor demos.",
+          url: "http://localhost:${PORT}/traffic-lab?target=java-tenant-b",
+          child: true
+        },
+        {
+          group: "Dashboards",
           name: "Grafana",
           description: "Dashboards for request rate, errors, and latency.",
           url: "http://localhost:3000/d/demo-api/demo-api?orgId=1&refresh=10s"
         },
         {
+          group: "Dashboards",
           name: "Prometheus",
           description: "PromQL query UI for raw metrics.",
           url: "http://localhost:9090/graph"
         },
         {
+          group: "GitOps",
           name: "Argo CD",
           description: "GitOps sync, health, and drift view for lab applications.",
           url: "https://localhost:18080"
         },
         {
-          name: "Traffic Lab",
-          description: "Generate traffic, errors, and slow requests for dashboard practice.",
-          url: "http://localhost:${PORT}/traffic-lab"
+          group: "Raw endpoints",
+          name: "Python Demo API",
+          description: "Flask endpoint identity and telemetry response.",
+          url: "http://localhost:${PORT}/app-endpoint?target=demo-api-tenant-a"
         },
         {
-          name: "Demo API",
-          description: "Application root endpoint through Service port-forward.",
-          url: "http://localhost:8080/"
-        },
-        {
-          name: "Demo API metrics",
-          description: "Raw Prometheus text exposed by the app.",
-          url: "http://localhost:8080/metrics"
-        },
-        {
-          name: "Demo API health",
-          description: "Health endpoint used by checks.",
-          url: "http://localhost:8080/healthz"
+          group: "Raw endpoints",
+          name: "Java app",
+          description: "Java endpoint identity, SQLite, and telemetry response.",
+          url: "http://localhost:${PORT}/app-endpoint?target=java-tenant-b"
         }
       ];
 
@@ -709,8 +842,17 @@ const page = `<!doctype html>
         workspace.classList.toggle("compact", !isPrometheus);
       }
 
+      let previousGroup = "";
       for (const tool of tools) {
+        if (tool.group !== previousGroup) {
+          const section = document.createElement("div");
+          section.className = "nav-section";
+          section.textContent = tool.group;
+          cards.appendChild(section);
+          previousGroup = tool.group;
+        }
         const button = document.createElement("button");
+        if (tool.child) button.classList.add("child");
         button.innerHTML = '<div class="title">' + tool.name + '</div><div class="desc">' + tool.description + '</div>';
         button.addEventListener("click", () => select(tool));
         toolButtons.set(tool.name, button);
@@ -763,6 +905,23 @@ const trafficPage = `<!doctype html>
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 12px;
+      }
+      .target-summary {
+        margin: 0 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 10px 12px;
+      }
+      .target-name {
+        font-size: 15px;
+        font-weight: 800;
+      }
+      .target-help {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
       }
       .scenario {
         border: 1px solid var(--line);
@@ -828,22 +987,39 @@ const trafficPage = `<!doctype html>
     <div class="intro">
       Run controlled demo traffic, then watch Grafana and Prometheus. Prometheus scrapes on an interval, so panels may take one or two scrape windows to move.
     </div>
+    <div class="target-summary">
+      <div class="target-name" id="target-name"></div>
+      <div class="target-help" id="target-help"></div>
+    </div>
     <div class="grid" id="scenarios"></div>
     <pre class="output" id="output">Choose an action. Then check Grafana request rate, error rate, and p95 latency panels.</pre>
     <script>
       const scenarios = ${JSON.stringify(trafficScenarios)};
+      const targets = ${JSON.stringify(trafficTargets)};
       const output = document.getElementById("output");
       const container = document.getElementById("scenarios");
+      const targetName = document.getElementById("target-name");
+      const targetHelp = document.getElementById("target-help");
+      const targetParam = new URLSearchParams(window.location.search).get("target");
+      const target = targets.find((item) => item.id === targetParam) || targets[0];
 
       function setBusy(isBusy) {
         for (const button of document.querySelectorAll("button")) button.disabled = isBusy;
       }
 
+      function updateTargetHelp() {
+        targetName.textContent = target.title;
+        targetHelp.textContent = "Grafana: Service=" + target.service + ", Tenant=" + target.tenant + ", Demo window=30s.";
+      }
+
       async function runScenario(scenario) {
         setBusy(true);
-        output.textContent = "running " + scenario.title + "...";
+        output.textContent = "running " + scenario.title + " against " + target.description + "...";
         try {
-          const response = await fetch("/api/traffic?scenario=" + encodeURIComponent(scenario.id));
+          const response = await fetch(
+            "/api/traffic?scenario=" + encodeURIComponent(scenario.id) +
+            "&target=" + encodeURIComponent(target.id)
+          );
           const body = await response.json();
           output.textContent = JSON.stringify(body, null, 2) + "\\n\\nNext: open Grafana and watch the panels. If values do not move yet, wait for the next scrape.";
         } catch (error) {
@@ -852,6 +1028,8 @@ const trafficPage = `<!doctype html>
           setBusy(false);
         }
       }
+
+      updateTargetHelp();
 
       for (const scenario of scenarios) {
         const card = document.createElement("section");
@@ -1202,6 +1380,12 @@ const server = http.createServer(async (request, response) => {
     response.end(trafficPage);
     return;
   }
+  if (url.pathname === "/app-endpoint") {
+    const target = trafficTargets.find((item) => item.id === url.searchParams.get("target")) || trafficTargets[0];
+    response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    response.end(renderAppEndpointPage(target));
+    return;
+  }
   if (url.pathname === "/guide") {
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     response.end(guidePage);
@@ -1209,12 +1393,13 @@ const server = http.createServer(async (request, response) => {
   }
   if (url.pathname === "/api/traffic") {
     const scenario = trafficScenarios.find((item) => item.id === url.searchParams.get("scenario"));
+    const target = trafficTargets.find((item) => item.id === url.searchParams.get("target")) || trafficTargets[0];
     if (!scenario) {
       response.writeHead(404, { "content-type": "application/json; charset=utf-8" });
       response.end(JSON.stringify({ error: "unknown scenario" }));
       return;
     }
-    const result = await runTrafficScenario(scenario);
+    const result = await runTrafficScenario(scenario, target);
     response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     response.end(JSON.stringify(result));
     return;

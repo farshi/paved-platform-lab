@@ -12,6 +12,11 @@ This is the workload used to demonstrate:
 - rollback
 - metrics, logs, and traces
 
+Runtime demo knobs:
+
+- `ERROR_RATE_PERCENT`: injects failures into normal request paths.
+- `DEFAULT_SLOW_SECONDS`: controls `/slow` latency when no query value is passed.
+
 ## Phase 1
 
 Keep it small and easy to reason about.

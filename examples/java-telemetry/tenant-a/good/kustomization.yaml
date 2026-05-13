@@ -1,0 +1,20 @@
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - resourcequota.yaml
+  - limitrange.yaml
+  - ../../../../services/java-telemetry-api/manifests/base
+
+namespace: tenant-a
+
+labels:
+  - pairs:
+      tenant: tenant-a
+    includeSelectors: true
+
+images:
+  - name: ghcr.io/rfar/platform-guardrails-lab/java-telemetry-api
+    newTag: 0.1.0
+
+patches:
+  - path: patch-good-env.yaml

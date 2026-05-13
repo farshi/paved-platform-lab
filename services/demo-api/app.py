@@ -1,4 +1,5 @@
 import os
+import random
 import time
 from flask import Flask, jsonify, request, Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
@@ -15,6 +16,8 @@ SERVICE_NAME = os.getenv("SERVICE_NAME", "demo-api")
 SERVICE_VERSION = os.getenv("SERVICE_VERSION", "0.1.0")
 TENANT = os.getenv("TENANT", "shared")
 OTEL_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "").strip()
+ERROR_RATE_PERCENT = max(0.0, min(float(os.getenv("ERROR_RATE_PERCENT", "0")), 100.0))
+DEFAULT_SLOW_SECONDS = max(0.0, min(float(os.getenv("DEFAULT_SLOW_SECONDS", "0.25")), 5.0))
 
 
 REQUESTS = Counter(
@@ -73,6 +76,11 @@ def collect_metrics(response):
 @app.before_request
 def mark_start():
     request._start_time = time.perf_counter()
+    if request.path in {"/healthz", "/readyz", "/metrics", "/fail"}:
+        return None
+    if ERROR_RATE_PERCENT > 0 and random.uniform(0, 100) < ERROR_RATE_PERCENT:
+        return jsonify({"status": "error", "message": "injected demo failure"}), 500
+    return None
 
 
 @app.get("/")
@@ -82,7 +90,11 @@ def index():
             "service": SERVICE_NAME,
             "version": SERVICE_VERSION,
             "tenant": TENANT,
-            "message": "platform guardrails lab demo API",
+            "runtime": "python-flask",
+            "message": (
+                "Hello, I am a Flask endpoint. I emit Prometheus metrics, "
+                "structured logs, and OpenTelemetry traces for the platform guardrails demo."
+            ),
         }
     )
 
@@ -99,7 +111,7 @@ def readyz():
 
 @app.get("/slow")
 def slow():
-    delay = float(request.args.get("seconds", "0.25"))
+    delay = float(request.args.get("seconds", str(DEFAULT_SLOW_SECONDS)))
     delay = max(0.0, min(delay, 5.0))
     time.sleep(delay)
     return jsonify({"status": "ok", "slept_seconds": delay})

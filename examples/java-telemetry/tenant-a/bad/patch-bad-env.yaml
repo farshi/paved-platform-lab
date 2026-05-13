@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-telemetry-api
+spec:
+  template:
+    spec:
+      containers:
+        - name: java-telemetry-api
+          env:
+            - name: ERROR_RATE_PERCENT
+              value: "85"
+            - name: DEFAULT_SLOW_SECONDS
+              value: "1.2"

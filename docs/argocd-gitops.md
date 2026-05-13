@@ -53,10 +53,10 @@ This follows the standard Argo CD local install shape:
 
 ```sh
 kubectl create namespace argocd
-kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply --server-side --force-conflicts -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-The lab uses server-side apply because the Argo CD CRDs are large enough to hit the client-side `last-applied-configuration` annotation limit.
+The lab uses server-side apply because the Argo CD CRDs are large enough to hit the client-side `last-applied-configuration` annotation limit. It uses `--force-conflicts` because this local lab owns the Argo CD install manifest and must recover cleanly if an earlier run used a different field manager.
 
 The lab target also waits for Argo CD deployments and pods to become ready.
 
@@ -189,7 +189,21 @@ rerun:
 make install-argocd
 ```
 
-The Makefile uses `kubectl apply --server-side` so Argo CD's large CRDs do not need the client-side last-applied annotation.
+The Makefile uses `kubectl apply --server-side --force-conflicts` so Argo CD's large CRDs do not need the client-side last-applied annotation and reruns can recover from field-manager conflicts.
+
+If you see:
+
+```text
+error: no matching resources found
+```
+
+rerun:
+
+```sh
+make install-argocd
+```
+
+The install target waits for named Argo CD resources to be created before checking rollout status. That avoids the broad `kubectl wait --all` race where Kubernetes has accepted the manifest but matching deployments are not visible yet.
 
 ### Password secret not found
 

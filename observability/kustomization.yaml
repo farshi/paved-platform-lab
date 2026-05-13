@@ -6,3 +6,4 @@ resources:
   - grafana-dashboard-demo-api.yaml
   - service-monitor-demo-api-a.yaml
   - service-monitor-demo-api-b.yaml
+  - service-monitor-java-telemetry-api.yaml

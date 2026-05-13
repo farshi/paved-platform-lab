@@ -7,23 +7,57 @@ NAMESPACE_A ?= tenant-a
 NAMESPACE_B ?= tenant-b
 IMAGE_REPO ?= ghcr.io/rfar/platform-guardrails-lab/demo-api
 IMAGE_TAG ?= 0.1.0
+JAVA_IMAGE_REPO ?= ghcr.io/rfar/platform-guardrails-lab/java-telemetry-api
+JAVA_IMAGE_TAG ?= 0.1.0
+APP ?= demo-api
+ifeq ($(origin TENANT), undefined)
+ifeq ($(APP),java-telemetry-api)
+TENANT := tenant-b
+else
+TENANT := tenant-a
+endif
+endif
+APP_NAMESPACE := $(TENANT)
 ARGOCD_REPO_URL ?= https://github.com/farshi/paved-platform-lab.git
 ARGOCD_TARGET_REVISION ?= main
 
-.PHONY: help setup install install-tools install-addons bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-drift argocd-sync argocd-up argocd-password validate validate-policies validate-api-platform deploy break rollback resilience check-app evidence observability tools-up
+ifeq ($(APP),demo-api)
+APP_IMAGE_REPO := $(IMAGE_REPO)
+APP_IMAGE_TAG := $(IMAGE_TAG)
+APP_CONTEXT := services/demo-api
+APP_DEPLOY_KUSTOMIZE := examples/$(TENANT)
+APP_DEPLOYMENT := demo-api
+APP_TRAFFIC_PATHS ?= /
+else ifeq ($(APP),java-telemetry-api)
+APP_IMAGE_REPO := $(JAVA_IMAGE_REPO)
+APP_IMAGE_TAG := $(JAVA_IMAGE_TAG)
+APP_CONTEXT := services/java-telemetry-api
+APP_DEPLOY_KUSTOMIZE := examples/java-telemetry/$(TENANT)/good
+APP_BREAK_KUSTOMIZE := examples/java-telemetry/$(TENANT)/bad
+APP_DEPLOYMENT := java-telemetry-api
+APP_TRAFFIC_PATHS ?= /success,/orders
+else
+$(error Unsupported APP "$(APP)". Use APP=demo-api or APP=java-telemetry-api)
+endif
+
+.PHONY: help setup demo-ready demo-clean install install-tools install-addons bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-drift argocd-sync argocd-up argocd-password validate validate-policies validate-api-platform deploy break rollback traffic traffic-slow resilience check-app evidence observability tools-up
 
 help:
 	@echo "Setup targets:"
 	@echo "  make setup          Build fresh runnable lab after reset"
+	@echo "  make demo-ready     Prepare both demo apps, add-ons, GitOps, and validation"
+	@echo "  make demo-clean     Reset demo apps to good state and create clean baseline traffic"
 	@echo "  make install        Alias for make install-tools"
 	@echo "  make install-tools  Install/check local command-line tools"
 	@echo "  make install-addons Install Kyverno, observability, Argo CD, and Argo apps"
 	@echo "  make bootstrap      Create local k3d cluster"
 	@echo "  make reset          Delete local k3d cluster"
-	@echo "  make build          Build and import the demo API image"
-	@echo "  make deploy         Deploy good version"
+	@echo "  make build          Build and import selected app image"
+	@echo "  make deploy         Deploy selected app good version"
 	@echo ""
 	@echo "Demo driver targets:"
+	@echo "  APP=demo-api|java-telemetry-api selects the app for build/deploy/break/rollback/traffic"
+	@echo "  TENANT=tenant-a|tenant-b selects the namespace; defaults are demo-api=tenant-a, java-telemetry-api=tenant-b"
 	@echo "  make tools-up       Open portal and port-forward Grafana, Prometheus, Argo CD, and demo API"
 	@echo "  make evidence       Print compact demo evidence"
 	@echo "  make observability  Inspect observability stack and metrics"
@@ -34,8 +68,10 @@ help:
 	@echo "  make validate-policies Validate focused policy pass/fail examples"
 	@echo "  make validate-api-platform Validate policy-shaped API platform example"
 	@echo "  make check-app      Check demo API health from inside the cluster"
-	@echo "  make break          Apply bad change"
-	@echo "  make rollback       Roll back the workload"
+	@echo "  make break          Apply selected app bad change"
+	@echo "  make rollback       Roll back selected app workload"
+	@echo "  make traffic        Generate selected app SLO traffic"
+	@echo "  make traffic-slow   Generate selected app slow-path traffic"
 	@echo "  make resilience     Delete one demo API pod and watch Kubernetes self-heal"
 	@echo ""
 	@echo "Special targets:"
@@ -48,6 +84,35 @@ help:
 	@echo "  make argocd-password Print Argo CD admin password"
 
 setup: install-tools bootstrap build install-kyverno install-observability deploy install-argocd argocd-apps
+
+demo-ready:
+	$(SHOW) 'make install-tools'
+	@$(MAKE) install-tools
+	$(SHOW) 'make bootstrap'
+	@$(MAKE) bootstrap
+	$(SHOW) 'make build APP=demo-api TENANT=tenant-a'
+	@$(MAKE) build APP=demo-api TENANT=tenant-a
+	$(SHOW) 'make build APP=java-telemetry-api TENANT=tenant-b'
+	@$(MAKE) build APP=java-telemetry-api TENANT=tenant-b
+	$(SHOW) 'make install-addons'
+	@$(MAKE) install-addons
+	$(SHOW) 'make deploy APP=demo-api TENANT=tenant-a'
+	@$(MAKE) deploy APP=demo-api TENANT=tenant-a
+	$(SHOW) 'make deploy APP=java-telemetry-api TENANT=tenant-b'
+	@$(MAKE) deploy APP=java-telemetry-api TENANT=tenant-b
+	$(SHOW) 'make validate'
+	@$(MAKE) validate
+
+demo-clean:
+	$(SHOW) 'make deploy APP=demo-api TENANT=tenant-a'
+	@$(MAKE) deploy APP=demo-api TENANT=tenant-a
+	$(SHOW) 'make deploy APP=java-telemetry-api TENANT=tenant-b'
+	@$(MAKE) deploy APP=java-telemetry-api TENANT=tenant-b
+	$(SHOW) 'make traffic APP=demo-api TENANT=tenant-a APP_TRAFFIC_COUNT=40 APP_TRAFFIC_PATHS=/'
+	@$(MAKE) traffic APP=demo-api TENANT=tenant-a APP_TRAFFIC_COUNT=40 APP_TRAFFIC_PATHS=/
+	$(SHOW) 'make traffic APP=java-telemetry-api TENANT=tenant-b APP_TRAFFIC_COUNT=40 APP_TRAFFIC_PATHS=/success,/orders'
+	@$(MAKE) traffic APP=java-telemetry-api TENANT=tenant-b APP_TRAFFIC_COUNT=40 APP_TRAFFIC_PATHS=/success,/orders
+	@echo "Clean baseline generated. In Grafana use Last 2 minutes, Demo window=30s."
 
 install: install-tools
 
@@ -80,10 +145,10 @@ reset:
 	fi
 
 build:
-	$(SHOW) 'docker build -t $(IMAGE_REPO):$(IMAGE_TAG) services/demo-api'
-	@docker build -t $(IMAGE_REPO):$(IMAGE_TAG) services/demo-api
-	$(SHOW) 'k3d image import $(IMAGE_REPO):$(IMAGE_TAG) -c $(CLUSTER_NAME)'
-	@k3d image import $(IMAGE_REPO):$(IMAGE_TAG) -c $(CLUSTER_NAME)
+	$(SHOW) 'APP=$(APP) docker build -t $(APP_IMAGE_REPO):$(APP_IMAGE_TAG) $(APP_CONTEXT)'
+	@docker build -t $(APP_IMAGE_REPO):$(APP_IMAGE_TAG) $(APP_CONTEXT)
+	$(SHOW) 'k3d image import $(APP_IMAGE_REPO):$(APP_IMAGE_TAG) -c $(CLUSTER_NAME)'
+	@k3d image import $(APP_IMAGE_REPO):$(APP_IMAGE_TAG) -c $(CLUSTER_NAME)
 
 scaffold:
 	@echo "Use templates/service as the source for new team services."
@@ -112,12 +177,20 @@ install-observability:
 install-argocd:
 	$(SHOW) 'kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -'
 	@kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-	$(SHOW) 'kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml'
-	@kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-	$(SHOW) 'kubectl wait --for=condition=Available deployment -n argocd --all --timeout=180s'
-	@kubectl wait --for=condition=Available deployment -n argocd --all --timeout=180s
-	$(SHOW) 'kubectl wait --for=condition=Ready pod -n argocd -l app.kubernetes.io/part-of=argocd --timeout=180s'
-	@kubectl wait --for=condition=Ready pod -n argocd -l app.kubernetes.io/part-of=argocd --timeout=180s
+	$(SHOW) 'kubectl apply --server-side --force-conflicts -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml'
+	@kubectl apply --server-side --force-conflicts -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+	$(SHOW) 'kubectl wait --for=create deployment/argocd-server -n argocd --timeout=180s'
+	@kubectl wait --for=create deployment/argocd-server -n argocd --timeout=180s
+	$(SHOW) 'kubectl wait --for=create deployment/argocd-repo-server -n argocd --timeout=180s'
+	@kubectl wait --for=create deployment/argocd-repo-server -n argocd --timeout=180s
+	$(SHOW) 'kubectl wait --for=create statefulset/argocd-application-controller -n argocd --timeout=180s'
+	@kubectl wait --for=create statefulset/argocd-application-controller -n argocd --timeout=180s
+	$(SHOW) 'kubectl rollout status deployment/argocd-server -n argocd --timeout=180s'
+	@kubectl rollout status deployment/argocd-server -n argocd --timeout=180s
+	$(SHOW) 'kubectl rollout status deployment/argocd-repo-server -n argocd --timeout=180s'
+	@kubectl rollout status deployment/argocd-repo-server -n argocd --timeout=180s
+	$(SHOW) 'kubectl rollout status statefulset/argocd-application-controller -n argocd --timeout=180s'
+	@kubectl rollout status statefulset/argocd-application-controller -n argocd --timeout=180s
 
 argocd-apps:
 	$(SHOW) 'ARGOCD_REPO_URL=$(ARGOCD_REPO_URL) ARGOCD_TARGET_REVISION=$(ARGOCD_TARGET_REVISION) node scripts/argocd/render-apps.js | kubectl apply -f -'
@@ -150,6 +223,10 @@ validate:
 	@kubectl apply -k examples/tenant-a --dry-run=server
 	$(SHOW) 'kubectl apply -k examples/tenant-b --dry-run=server'
 	@kubectl apply -k examples/tenant-b --dry-run=server
+	$(SHOW) 'kubectl apply -k examples/java-telemetry/tenant-a/good --dry-run=server'
+	@kubectl apply -k examples/java-telemetry/tenant-a/good --dry-run=server
+	$(SHOW) 'kubectl apply -k examples/java-telemetry/tenant-b/good --dry-run=server'
+	@kubectl apply -k examples/java-telemetry/tenant-b/good --dry-run=server
 	$(SHOW) 'kubectl apply -k examples/bad --dry-run=server'
 	@if kubectl apply -k examples/bad --dry-run=server >/dev/null 2>&1; then echo "bad manifest unexpectedly passed"; exit 1; else echo "bad manifest rejected as expected"; fi
 
@@ -162,16 +239,35 @@ validate-api-platform:
 	@node scripts/validate-api-platform-examples.js
 
 deploy:
-	$(SHOW) 'kubectl apply -k examples/tenant-a'
-	@kubectl apply -k examples/tenant-a
+	$(SHOW) 'APP=$(APP) kubectl apply -k $(APP_DEPLOY_KUSTOMIZE)'
+	@kubectl apply -k $(APP_DEPLOY_KUSTOMIZE)
+	$(SHOW) 'APP=$(APP) kubectl rollout status deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) --timeout=120s'
+	@kubectl rollout status deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) --timeout=120s
 
 break:
-	$(SHOW) 'kubectl apply -k examples/bad'
-	@kubectl apply -k examples/bad
+ifeq ($(APP),demo-api)
+	$(SHOW) 'APP=$(APP) TENANT=$(TENANT) kubectl set env deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) ERROR_RATE_PERCENT=85 DEFAULT_SLOW_SECONDS=1.2'
+	@kubectl set env deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) ERROR_RATE_PERCENT=85 DEFAULT_SLOW_SECONDS=1.2
+else
+	$(SHOW) 'APP=$(APP) kubectl apply -k $(APP_BREAK_KUSTOMIZE)'
+	@kubectl apply -k $(APP_BREAK_KUSTOMIZE)
+endif
+	$(SHOW) 'APP=$(APP) kubectl rollout status deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) --timeout=120s'
+	@kubectl rollout status deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) --timeout=120s
 
 rollback:
-	$(SHOW) 'kubectl rollout undo deployment/demo-api -n tenant-a'
-	@kubectl rollout undo deployment/demo-api -n tenant-a
+	$(SHOW) 'APP=$(APP) kubectl rollout undo deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE)'
+	@kubectl rollout undo deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE)
+	$(SHOW) 'APP=$(APP) kubectl rollout status deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) --timeout=120s'
+	@kubectl rollout status deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) --timeout=120s
+
+traffic:
+	$(SHOW) 'APP=$(APP) node scripts/app-traffic.js'
+	@APP="$(APP)" APP_NAMESPACE="$(APP_NAMESPACE)" APP_SERVICE="$(APP_DEPLOYMENT)" APP_TRAFFIC_PATHS="$(APP_TRAFFIC_PATHS)" node scripts/app-traffic.js
+
+traffic-slow:
+	$(SHOW) 'APP=$(APP) APP_TRAFFIC_PATHS=/slow node scripts/app-traffic.js'
+	@APP="$(APP)" APP_NAMESPACE="$(APP_NAMESPACE)" APP_SERVICE="$(APP_DEPLOYMENT)" APP_TRAFFIC_PATHS="/slow" node scripts/app-traffic.js
 
 resilience:
 	$(SHOW) 'node scripts/resilience-demo.js'

@@ -7,6 +7,78 @@ The commands are split into two groups:
 - setup commands prepare the lab before the demo
 - demo commands are the things you run while presenting
 
+## Low-Stress Demo Path
+
+Use this path when you want the least typing during a live demo.
+
+Before the demo:
+
+```sh
+make demo-ready
+```
+
+This prepares both demo apps:
+
+- `Python Demo API`: `tenant-a/demo-api` baseline
+- `Java app`: `tenant-b/java-telemetry-api` noisy neighbor
+
+Start the portal in one terminal and leave it running:
+
+```sh
+make tools-up
+```
+
+Before showing Grafana, reset to a clean good state:
+
+```sh
+make demo-clean
+```
+
+Use a second terminal for demo actions:
+
+```sh
+make demo-clean
+make traffic
+APP=java-telemetry-api TENANT=tenant-b make traffic
+APP=java-telemetry-api TENANT=tenant-b make break
+APP=java-telemetry-api TENANT=tenant-b make traffic
+APP=java-telemetry-api TENANT=tenant-b make traffic-slow
+APP=java-telemetry-api TENANT=tenant-b make deploy
+APP=java-telemetry-api TENANT=tenant-b make traffic
+```
+
+In Grafana:
+
+1. Set time range to `Last 2 minutes`.
+2. Keep refresh at `5s` or `10s`.
+3. For baseline, set `Service=demo-api` and `Tenant=tenant-a`.
+4. For noisy neighbor, set `Service=java-telemetry-api` and `Tenant=tenant-b`.
+5. Set `Demo window=30s`.
+
+In the portal:
+
+1. Under `Apps`, open `Python Demo API` for normal baseline traffic.
+2. Under `Apps`, open `Java app` before running Java error, slow, or mixed scenarios.
+3. Match Grafana `Service` and `Tenant` to the selected app.
+
+What should move:
+
+- after `make traffic`: request rate moves
+- after `make demo-clean`: 5xx should be zero or fade out after one 30s window
+- after Java `make break` plus Java `make traffic`: 5xx, availability, and burn panels move for tenant B
+- after Java `make traffic-slow`: latency panels move for tenant B
+- after Java `make deploy` plus Java `make traffic`: tenant B moves back toward healthy
+- tenant A stays separate when Grafana is set to `Service=demo-api`, `Tenant=tenant-a`
+
+If something feels stuck:
+
+- no Grafana data: check `Service`, `Tenant`, and `Demo window`
+- old 5xx still visible: run `make demo-clean`, set `Last 2 minutes`, wait 30s, then refresh
+- no Java pods: run `APP=java-telemetry-api TENANT=tenant-b make build deploy`
+- port-forward lost: stop `make tools-up` with `Ctrl-C`, then run it again
+- panels move slowly: wait one or two 5s scrape intervals and run `make traffic` again
+- bad state remains: run `make deploy` and `APP=java-telemetry-api TENANT=tenant-b make deploy`
+
 ## Demo Story
 
 ```text
@@ -15,6 +87,7 @@ setup local platform
   -> prove baseline health
   -> create traffic
   -> read SLI/SLO panels in Grafana
+  -> break tenant-b as the noisy neighbor
   -> prove the same signals in Prometheus
   -> kill one pod and watch Kubernetes recover
   -> create Argo CD drift
@@ -29,6 +102,7 @@ setup local platform
 - Error budget: the allowed gap between perfect service and the SLO. A 99 percent availability SLO gives a 1 percent error budget.
 - Burn rate: how fast the service is consuming its error budget. `2x` means the service is spending budget twice as fast as allowed.
 - p95 latency: the 95th percentile request time. If p95 is 500ms, 95 out of 100 requests were 500ms or faster, and 5 were slower.
+- Noisy neighbor: one tenant or workload creates enough load, errors, or latency to hurt itself or shared resources. In this lab, tenant B is made noisy while tenant A stays separate.
 
 Use this sentence in the demo:
 
@@ -44,7 +118,7 @@ Fresh start:
 
 ```sh
 make reset
-make setup
+make demo-ready
 ```
 
 Same setup, expanded:
@@ -53,8 +127,12 @@ Same setup, expanded:
 make install
 make bootstrap
 make build
+APP=java-telemetry-api TENANT=tenant-b make build
 make install-addons
 make deploy
+APP=java-telemetry-api TENANT=tenant-b make deploy
+make validate
+make demo-clean
 make argocd
 ```
 
@@ -68,6 +146,7 @@ Expected:
 - Argo CD is installed
 - `platform-guardrails-tenant-a` exists
 - `demo-api` is running in `tenant-a`
+- `java-telemetry-api` is running in `tenant-b`
 
 If Argo CD apps are missing:
 
@@ -186,6 +265,41 @@ Talk track:
 
 ```text
 This is the moment an operator cares about. The app can still be running, but the SLO says users are being hurt.
+```
+
+### 4b. Noisy Neighbor Tenant
+
+In terminal:
+
+```sh
+APP=java-telemetry-api TENANT=tenant-b make deploy
+make traffic
+APP=java-telemetry-api TENANT=tenant-b make traffic
+APP=java-telemetry-api TENANT=tenant-b make break
+APP=java-telemetry-api TENANT=tenant-b make traffic
+APP=java-telemetry-api TENANT=tenant-b make traffic-slow
+APP=java-telemetry-api TENANT=tenant-b make deploy
+```
+
+In Grafana:
+
+1. Set `Service` to `demo-api`.
+2. Set `Tenant` to `tenant-a`.
+3. Confirm baseline panels are steady.
+4. Set `Service` to `java-telemetry-api`.
+5. Set `Tenant` to `tenant-b`.
+6. Watch 5xx percentage, availability SLI, latency SLI, and burn rate move.
+
+Expected:
+
+- tenant B burns its own SLO
+- tenant A remains a separate baseline
+- same dashboard reads both tenants because both apps emit the same metric labels
+
+Talk track:
+
+```text
+This is noisy-neighbor behavior: one tenant is unhealthy, but the platform keeps the blast radius visible and bounded.
 ```
 
 ### 5. Slow User Experience
@@ -329,7 +443,7 @@ In terminal:
 
 ```sh
 make validate-policies
-make break
+make validate
 ```
 
 Expected:

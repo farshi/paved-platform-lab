@@ -80,6 +80,7 @@ This applies `observability/kustomization.yaml`, which includes:
 - `grafana-dashboard-demo-api.yaml`: Grafana dashboard ConfigMap
 - `service-monitor-demo-api-a.yaml`: Prometheus scrape config for tenant A
 - `service-monitor-demo-api-b.yaml`: Prometheus scrape config for tenant B
+- `service-monitor-java-telemetry-api.yaml`: Prometheus scrape config for the Java telemetry service
 
 ## Mental Model
 
@@ -123,6 +124,8 @@ The demo API exports metrics such as `http_requests_total` and `http_request_dur
 
 The Grafana dashboard has variables for demo SLO targets:
 
+- `Service`
+- `Tenant`
 - `Availability SLO %`
 - `Latency SLO %`
 - `Latency threshold seconds`
@@ -130,9 +133,9 @@ The Grafana dashboard has variables for demo SLO targets:
 - `Burn threshold`
 - `Demo window`
 
-Use these as demo controls. They do not change the app. They change how the dashboard compares the measured SLI against the target.
+Use these as demo controls. They do not change the app. They change which scraped service and tenant are shown and how the dashboard compares the measured SLI against the target.
 
-The demo API ServiceMonitor scrapes every 5s. The dashboard defaults to a 30s demo window for request, error, availability, latency-SLI, and burn-rate panels so Traffic Lab actions are visible after the next scrape or two. It keeps p95 latency on a 10m bucket window because sparse local histogram traffic can make short `histogram_quantile` windows noisy.
+The demo API and Java telemetry API ServiceMonitors scrape every 5s. The dashboard defaults to a 30s demo window for request, error, availability, latency-SLI, and burn-rate panels so Traffic Lab actions are visible after the next scrape or two. It keeps p95 latency on a 10m bucket window because sparse local histogram traffic can make short `histogram_quantile` windows noisy.
 
 Prometheus classic histogram buckets are cumulative, so bucket values must stay non-decreasing through `+Inf`. If Prometheus shows a monotonicity info message right after restarts or very sparse traffic, generate traffic for another scrape window and rerun the query.
 
@@ -171,6 +174,24 @@ Traffic Lab lets learners trigger demo scenarios:
 - mixed incident
 
 These actions call the port-forwarded demo API and help show why DevOps engineers watch request rate, error rate, and latency together. Scenario source of truth: `observability/traffic-scenarios.json`.
+
+For the Java telemetry service, use terminal traffic:
+
+```sh
+APP=java-telemetry-api TENANT=tenant-b make deploy
+APP=java-telemetry-api TENANT=tenant-b make traffic
+APP=java-telemetry-api TENANT=tenant-b make break
+APP=java-telemetry-api TENANT=tenant-b make traffic
+```
+
+Then open Grafana and set `Service` to `java-telemetry-api` and `Tenant` to `tenant-b`. The bad overlay raises Java error rate and latency so the same dashboard shows SLO burn for a second tenant.
+
+Noisy-neighbor demo:
+
+- `tenant-a/demo-api` is the steady baseline.
+- `tenant-b/java-telemetry-api` is the noisy neighbor.
+- Running `make break` for tenant B burns tenant B's SLO without changing tenant A's deployment.
+- ResourceQuota and LimitRange keep each tenant bounded in its namespace.
 
 User Guide renders Markdown from:
 

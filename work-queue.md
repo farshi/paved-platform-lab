@@ -27,10 +27,16 @@ Keep one teaching spine:
 - Platform-as-a-service demo story exists in `docs/runbooks/platform-as-a-service.md`.
 - Core local run was proved on 2026-05-09: bootstrap, build, Kyverno install, validate, deploy, blocked bad manifest, and rollback.
 - Evidence output exists through `make evidence`.
+- Python Demo API runs as the `tenant-a` baseline.
+- Java telemetry API runs as the `tenant-b` noisy-neighbor demo app.
+- Portal app cards can drive Python or Java traffic and raw endpoint views.
+- Argo CD GitOps and API platform lens examples are documented and checked off.
 - Gateway stays phase 2 unless ingress becomes insufficient.
 - GCP stays out of MVP.
 
 ## Next Work
+
+Next active ticket: **Q9 - Simple Rollback Watcher**.
 
 ### Q0 - Platform-as-a-Service Demo Story
 
@@ -142,13 +148,13 @@ Done when: a team can use the docs to learn the platform path without platform-t
 
 Goal: add one small realistic service for SLO and rollback lessons.
 
-- [ ] Add a minimal Java service.
-- [ ] Use SQLite for one simple stateful operation.
-- [ ] Expose health, success, slow, and failing paths.
-- [ ] Emit request count, latency, and error metrics.
-- [ ] Keep OpenTelemetry wiring minimal.
-- [ ] Add manifests that deploy the good version.
-- [ ] Add one bad version that burns error or latency budget quickly.
+- [x] Add a minimal Java service.
+- [x] Use SQLite for one simple stateful operation.
+- [x] Expose health, success, slow, and failing paths.
+- [x] Emit request count, latency, and error metrics.
+- [x] Keep OpenTelemetry wiring minimal.
+- [x] Add manifests that deploy the good version.
+- [x] Add one bad version that burns error or latency budget quickly.
 
 Done when: the lab can create visible SLO burn from a tiny service.
 

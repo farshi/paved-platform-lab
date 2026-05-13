@@ -106,7 +106,9 @@ To copy/paste samples, run `make tools-up`, open `http://localhost:18000`, click
 
 Traffic scenario source of truth: `observability/traffic-scenarios.json`.
 
-To generate dashboard movement, run `make tools-up`, open `http://localhost:18000`, click the Traffic Lab card, and run a scenario.
+To generate dashboard movement, run `make tools-up`, open `http://localhost:18000`, choose an app under `Apps`, and run a scenario. Use `Python Demo API` for the `tenant-a` baseline and `Java app` for the `tenant-b` noisy-neighbor demo.
+
+Under `Raw endpoints`, open `Python Demo API` or `Java app` to show the app introducing itself through its root endpoint. This is useful before traffic generation because it proves which runtime and tenant you are about to demo.
 
 The same portal includes an Argo CD card after `make install-argocd` and `make argocd-apps` have run. The browser may show a local certificate warning for the Argo CD frame because the upstream service uses self-signed TLS.
 

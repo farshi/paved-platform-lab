@@ -2,47 +2,47 @@
   {
     "title": "Request rate",
     "description": "Requests per second across all demo API pods. Uses a 30s demo window so Traffic Lab actions show quickly after the next scrape.",
-    "query": "sum(rate(http_requests_total{service=\"demo-api\"}[30s]))"
+    "query": "sum(rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\"}[30s]))"
   },
   {
     "title": "5xx error rate",
     "description": "Server errors per second for the demo API. Uses a 30s demo window for visibility.",
-    "query": "sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[30s]))"
+    "query": "sum(rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\",status=~\"5..\"}[30s]))"
   },
   {
     "title": "Error percentage",
     "description": "Percent of demo API requests returning 5xx errors.",
-    "query": "(\n  sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[30s]))\n  /\n  sum(rate(http_requests_total{service=\"demo-api\"}[30s]))\n) * 100"
+    "query": "(\n  sum(rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\",status=~\"5..\"}[30s]))\n  /\n  sum(rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\"}[30s]))\n) * 100"
   },
   {
     "title": "Availability SLI vs dashboard SLO",
     "description": "Percent of demo API requests that avoid 5xx responses. Compare this result with the dashboard Availability SLO variable.",
-    "query": "100 * (\n  sum(rate(http_requests_total{service=\"demo-api\",status!~\"5..\"}[30s]))\n  /\n  sum(rate(http_requests_total{service=\"demo-api\"}[30s]))\n)"
+    "query": "100 * (\n  sum(rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\",status!~\"5..\"}[30s]))\n  /\n  sum(rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\"}[30s]))\n)"
   },
   {
     "title": "Latency SLI under 500ms vs dashboard SLO",
     "description": "Percent of demo API requests completed under 500ms. 500ms matches a default Python Prometheus histogram bucket and is the dashboard default.",
-    "query": "100 * (\n  sum(rate(http_request_duration_seconds_bucket{service=\"demo-api\",le=\"0.5\"}[30s]))\n  /\n  sum(rate(http_request_duration_seconds_count{service=\"demo-api\"}[30s]))\n)"
+    "query": "100 * (\n  sum(rate(http_request_duration_seconds_bucket{service=\"demo-api\",tenant=\"tenant-a\",le=\"0.5\"}[30s]))\n  /\n  sum(rate(http_request_duration_seconds_count{service=\"demo-api\",tenant=\"tenant-a\"}[30s]))\n)"
   },
   {
     "title": "Error budget burn rate",
     "description": "How fast the demo API is consuming a 5 percent demo error budget. A value above 2 matches the default fast-burn threshold.",
-    "query": "(\n  100 * sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[30s]))\n  /\n  sum(rate(http_requests_total{service=\"demo-api\"}[30s]))\n) / 5"
+    "query": "(\n  100 * sum(rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\",status=~\"5..\"}[30s]))\n  /\n  sum(rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\"}[30s]))\n) / 5"
   },
   {
-    "title": "P95 latency by namespace",
-    "description": "95 percent of requests are faster than this value, grouped by tenant namespace. Uses a 10m bucket rate because sparse local demo traffic can make short histogram windows noisy.",
-    "query": "histogram_quantile(\n  0.95,\n  sum by (le, namespace) (rate(http_request_duration_seconds_bucket{service=\"demo-api\"}[10m]))\n)"
+    "title": "P95 latency by tenant",
+    "description": "95 percent of requests are faster than this value, grouped by tenant. Uses a 10m bucket rate because sparse local demo traffic can make short histogram windows noisy.",
+    "query": "histogram_quantile(\n  0.95,\n  sum by (le, tenant) (rate(http_request_duration_seconds_bucket{service=\"demo-api\"}[10m]))\n)"
   },
   {
     "title": "Status code breakdown",
     "description": "Request rate grouped by HTTP status code.",
-    "query": "sum by (status) (rate(http_requests_total{service=\"demo-api\"}[30s]))"
+    "query": "sum by (status) (rate(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\"}[30s]))"
   },
   {
     "title": "5xx errors in demo window",
     "description": "Count of server errors seen in the last 30 seconds. Useful when rate panels take a scrape cycle to move.",
-    "query": "sum(increase(http_requests_total{service=\"demo-api\",status=~\"5..\"}[30s]))"
+    "query": "sum(increase(http_requests_total{service=\"demo-api\",tenant=\"tenant-a\",status=~\"5..\"}[30s]))"
   },
   {
     "title": "Scrape target health",

@@ -14,7 +14,7 @@ data:
       "version": 2,
       "refresh": "5s",
       "time": {
-        "from": "now-10m",
+        "from": "now-2m",
         "to": "now"
       },
       "templating": {
@@ -25,6 +25,22 @@ data:
             "type": "custom",
             "query": "30s,1m,2m",
             "current": { "text": "30s", "value": "30s" },
+            "hide": 0
+          },
+          {
+            "name": "service_name",
+            "label": "Service",
+            "type": "custom",
+            "query": "demo-api,java-telemetry-api",
+            "current": { "text": "demo-api", "value": "demo-api" },
+            "hide": 0
+          },
+          {
+            "name": "tenant_name",
+            "label": "Tenant",
+            "type": "custom",
+            "query": "tenant-a,tenant-b",
+            "current": { "text": "tenant-a", "value": "tenant-a" },
             "hide": 0
           },
           {
@@ -76,7 +92,7 @@ data:
           "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{service=\"demo-api\"}[$demo_window]))",
+              "expr": "sum(rate(http_requests_total{service=\"$service_name\",tenant=\"$tenant_name\"}[$demo_window]))",
               "legendFormat": "requests/sec"
             }
           ]
@@ -93,7 +109,7 @@ data:
           },
           "targets": [
             {
-              "expr": "sum(increase(http_requests_total{service=\"demo-api\",status=~\"5..\"}[$demo_window]))",
+              "expr": "sum(increase(http_requests_total{service=\"$service_name\",tenant=\"$tenant_name\",status=~\"5..\"}[$demo_window]))",
               "legendFormat": "5xx"
             }
           ]
@@ -111,7 +127,7 @@ data:
           },
           "targets": [
             {
-              "expr": "100 * (sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"demo-api\"}[$demo_window])))",
+              "expr": "100 * (sum(rate(http_requests_total{service=\"$service_name\",tenant=\"$tenant_name\",status=~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"$service_name\",tenant=\"$tenant_name\"}[$demo_window])))",
               "legendFormat": "5xx %"
             },
             {
@@ -133,7 +149,7 @@ data:
           },
           "targets": [
             {
-              "expr": "100 * (sum(rate(http_requests_total{service=\"demo-api\",status!~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"demo-api\"}[$demo_window])))",
+              "expr": "100 * (sum(rate(http_requests_total{service=\"$service_name\",tenant=\"$tenant_name\",status!~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"$service_name\",tenant=\"$tenant_name\"}[$demo_window])))",
               "legendFormat": "availability SLI"
             },
             {
@@ -155,7 +171,7 @@ data:
           },
           "targets": [
             {
-              "expr": "100 * (sum(rate(http_request_duration_seconds_bucket{service=\"demo-api\",le=\"${latency_threshold_seconds}\"}[$demo_window])) / sum(rate(http_request_duration_seconds_count{service=\"demo-api\"}[$demo_window])))",
+              "expr": "100 * (sum(rate(http_request_duration_seconds_bucket{service=\"$service_name\",tenant=\"$tenant_name\",le=\"${latency_threshold_seconds}\"}[$demo_window])) / sum(rate(http_request_duration_seconds_count{service=\"$service_name\",tenant=\"$tenant_name\"}[$demo_window])))",
               "legendFormat": "under ${latency_threshold_seconds}s SLI"
             },
             {
@@ -170,7 +186,7 @@ data:
           "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{service=\"demo-api\"}[10m])))",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{service=\"$service_name\",tenant=\"$tenant_name\"}[$demo_window])))",
               "legendFormat": "p95"
             }
           ]
@@ -187,7 +203,7 @@ data:
           },
           "targets": [
             {
-              "expr": "(100 * (sum(rate(http_requests_total{service=\"demo-api\",status=~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"demo-api\"}[$demo_window])))) / ${error_budget_percent}",
+              "expr": "(100 * (sum(rate(http_requests_total{service=\"$service_name\",tenant=\"$tenant_name\",status=~\"5..\"}[$demo_window])) / sum(rate(http_requests_total{service=\"$service_name\",tenant=\"$tenant_name\"}[$demo_window])))) / ${error_budget_percent}",
               "legendFormat": "live burn"
             },
             {

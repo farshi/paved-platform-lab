@@ -61,6 +61,7 @@ Platform operator questions and answers: `docs/questions/platform-operator.md`
 - `docs` - architecture, runbooks, questions, and decisions
 - `docs/learning` - mentoring tracks for Kubernetes, CI/CD, and platform self-service
 - `services/demo-api` - the sample API service
+- `services/java-telemetry-api` - tiny Java API with SQLite, Prometheus metrics, and OpenTelemetry traces
 - `examples/tenant-a` - working tenant example
 - `examples/tenant-b` - second tenant example
 - `labs/01-setup` - cluster bootstrap
@@ -88,13 +89,17 @@ Platform operator questions and answers: `docs/questions/platform-operator.md`
 - `make install-tools`
 - `make install-addons`
 - `make bootstrap`
+- `make demo-ready`
+- `make demo-clean`
 - `make build`
 - `make install-kyverno`
 - `make deploy`
+- `make traffic`
 - `make validate`
 - `make validate-policies`
 - `make break`
 - `make rollback`
+- `make traffic-slow`
 - `make check-app`
 - `make evidence`
 - `make install-observability`
@@ -109,7 +114,20 @@ Platform operator questions and answers: `docs/questions/platform-operator.md`
 
 After `make bootstrap`, use `make install-addons` to install the in-cluster platform add-ons: Kyverno, observability, Argo CD, and Argo CD app registration. You can still run the individual add-on targets when teaching each layer step by step.
 
+`make demo-ready` is the low-stress prep target for live demos. It builds and imports both app images, installs add-ons, deploys Python in `tenant-a`, deploys Java in `tenant-b`, and runs validation.
+
+`make demo-clean` resets the Python and Java demo apps to good state, waits for rollout, and generates healthy baseline traffic. Run it before showing Grafana so old 5xx and burn data can age out of the short demo window.
+
 `make tools-up` is the single long-running local UI command. It opens the portal and port-forwards Grafana, Prometheus, Argo CD, and the demo API.
+
+`APP` selects which app the shared demo targets control. `TENANT` selects the namespace.
+
+```sh
+make build deploy traffic
+APP=java-telemetry-api TENANT=tenant-b make build deploy traffic break rollback
+```
+
+Default pairing is Python `demo-api` in `tenant-a` and Java `java-telemetry-api` in `tenant-b`. That gives a noisy-neighbor demo: tenant B can burn its own SLO while tenant A remains a separate baseline.
 
 ## Next Step
 

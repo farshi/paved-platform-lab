@@ -15,9 +15,9 @@ The lab keeps the window short enough for a live demo. In a real service, use th
 
 ```promql
 100 * (
-  sum(rate(http_requests_total{service="demo-api",status!~"5.."}[5m]))
+  sum(rate(http_requests_total{service="demo-api",tenant="tenant-a",status!~"5.."}[5m]))
   /
-  sum(rate(http_requests_total{service="demo-api"}[5m]))
+  sum(rate(http_requests_total{service="demo-api",tenant="tenant-a"}[5m]))
 )
 ```
 
@@ -33,9 +33,9 @@ The lab keeps the window short enough for a live demo. In a real service, use th
 
 ```promql
 100 * (
-  sum(rate(http_request_duration_seconds_bucket{service="demo-api",le="0.5"}[1m]))
+  sum(rate(http_request_duration_seconds_bucket{service="demo-api",tenant="tenant-a",le="0.5"}[1m]))
   /
-  sum(rate(http_request_duration_seconds_count{service="demo-api"}[1m]))
+  sum(rate(http_request_duration_seconds_count{service="demo-api",tenant="tenant-a"}[1m]))
 )
 ```
 
@@ -49,9 +49,9 @@ The lab keeps the window short enough for a live demo. In a real service, use th
 
 ```promql
 100 * (
-  sum(rate(http_requests_total{service="demo-api",status=~"5.."}[5m]))
+  sum(rate(http_requests_total{service="demo-api",tenant="tenant-a",status=~"5.."}[5m]))
   /
-  sum(rate(http_requests_total{service="demo-api"}[5m]))
+  sum(rate(http_requests_total{service="demo-api",tenant="tenant-a"}[5m]))
 )
 ```
 

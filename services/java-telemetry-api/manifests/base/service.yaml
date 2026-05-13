@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-telemetry-api
+  labels:
+    app.kubernetes.io/name: java-telemetry-api
+spec:
+  selector:
+    app.kubernetes.io/name: java-telemetry-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
