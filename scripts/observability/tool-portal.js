@@ -471,6 +471,15 @@ const page = `<!doctype html>
         color: var(--muted);
         font-size: 13px;
       }
+      .source {
+        margin-top: 4px;
+        color: #15803d;
+        font-size: 13px;
+        font-weight: 800;
+      }
+      .source a {
+        color: #15803d;
+      }
       main {
         display: grid;
         grid-template-columns: 300px minmax(0, 1fr);
@@ -674,6 +683,7 @@ const page = `<!doctype html>
   <body>
     <header>
       <h1>Platform Guardrails Lab Tools</h1>
+      <div class="source"><strong>Source code: &gt; <a href="https://github.com/farshi/paved-platform-lab" target="_blank" rel="noreferrer">https://github.com/farshi/paved-platform-lab</a></strong></div>
       <div class="sub">Port-forwards stay alive while this process runs. Stop with Ctrl-C.</div>
     </header>
     <main>

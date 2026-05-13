@@ -193,7 +193,7 @@ Expected apps:
 
 ```text
 platform-guardrails-tenant-a       -> examples/tenant-a
-platform-guardrails-tenant-b       -> examples/tenant-b
+platform-guardrails-tenant-b       -> examples/java-telemetry/tenant-b/good
 platform-guardrails-policies       -> policies/kyverno
 platform-guardrails-observability  -> observability
 ```

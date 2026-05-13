@@ -7,9 +7,9 @@
   },
   {
     "name": "platform-guardrails-tenant-b",
-    "path": "examples/tenant-b",
+    "path": "examples/java-telemetry/tenant-b/good",
     "namespace": "tenant-b",
-    "description": "Tenant B workload, namespace, quota, limits, and RBAC."
+    "description": "Tenant B Java telemetry workload, namespace, quota, limits, and RBAC."
   },
   {
     "name": "platform-guardrails-api-platform",
