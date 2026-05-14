@@ -9,5 +9,9 @@ metadata:
 data:
   proxy: orders-v1
   target.url: https://api.example.com/orders
-  required.policies: Verify-JWT,OAuthV2-Verify-Access-Token,Quota-Per-Client,Spike-Arrest
+  identity.issuer: https://identity.example.com/oauth2/default
+  identity.audience: orders-api
+  identity.customer.claim: customer_id
+  identity.client.claim: client_id
+  required.policies: Verify-JWT,OAuthV2-Verify-Access-Token,Extract-Customer-Claims,Assign-identity-Headers,Quota-Per-Client,Spike-Arrest
   delivery.model: Git reviewed config, Argo CD sync, policy validation, telemetry proof

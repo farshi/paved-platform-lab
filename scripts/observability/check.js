@@ -1,6 +1,7 @@
 const cp = require("child_process");
+const path = require("path");
 
-const ROOT = "/Users/rfar/dev/platform-guardrails-lab";
+const ROOT = path.resolve(__dirname, "../..");
 const GREEN = "\x1b[32m";
 const RESET = "\x1b[0m";
 

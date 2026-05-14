@@ -23,7 +23,7 @@ Installer scripts live under `installer/*.installer.sh`.
 
 ## Backlog
 
-Next active item: **17. Rollback Watcher**. Items 15 and 16 have the demo story and Java telemetry app; the remaining operator-grade gap is automatic diagnosis and rollback.
+Next active item: **none for the current MVP**. Remaining items are phase-2 choices, not blockers for the demo demo.
 
 ### 1. Repo Skeleton
 
@@ -96,7 +96,7 @@ Next active item: **17. Rollback Watcher**. Items 15 and 16 have the demo story 
 - [x] Add compact evidence output for demo runs
 - [x] Add a summary of policy blocks and rollout events
 - [x] Add a short audit view for what changed and why
-- [ ] Decide if PatchPilot ships in MVP or stays phase 2
+- [ ] Decide if PatchPilot ships in phase 2
 
 ### 10. Observability
 
@@ -120,20 +120,20 @@ Next active item: **17. Rollback Watcher**. Items 15 and 16 have the demo story 
 
 - [x] Treat `k8s-gcp-basics` as the first mentoring track
 - [x] Add `ci-cd-basics` as the next mentoring track
-- [ ] Add a platform self-service track that explains paved roads, guardrails, and team autonomy
-- [ ] Add a DevOps best-practices track that shows better build, test, deploy, rollback, and feedback loops
+- [x] Add a platform self-service track that explains paved roads, guardrails, and team autonomy
+- [x] Add a DevOps best-practices track that shows better build, test, deploy, rollback, and feedback loops
 - [x] Keep every learning track step-based, plain-language, and tied to one runnable platform behavior
-- [ ] Link learning tracks back to the local guardrails lab so teams can move from concept to practice
+- [x] Link learning tracks back to the local guardrails lab so teams can move from concept to practice
 
 ### 13. CI/CD Basics Track
 
-- [ ] Explain Continuous Integration as daily mainline integration with an automated self-testing build
-- [ ] Show why branch-only CI delays real integration risk
-- [ ] Explain fast feedback as a team behavior control, not only a tool-speed metric
-- [ ] Show the difference between deployment and release
-- [ ] Add examples for feature toggles, rollback, blue-green, canary, and telemetry gates
-- [ ] Add a simple pipeline path: lint -> unit test -> build image -> scan -> deploy -> smoke test -> rollback proof
-- [ ] Keep examples small enough for teams to copy into their own services
+- [x] Explain Continuous Integration as daily mainline integration with an automated self-testing build
+- [x] Show why branch-only CI delays real integration risk
+- [x] Explain fast feedback as a team behavior control, not only a tool-speed metric
+- [x] Show the difference between deployment and release
+- [x] Add examples for feature toggles, rollback, blue-green, canary, and telemetry gates
+- [x] Add a simple pipeline path: lint -> unit test -> build image -> scan -> deploy -> smoke test -> rollback proof
+- [x] Keep examples small enough for teams to copy into their own services
 
 ### 14. Platform Mentoring System
 
@@ -151,7 +151,7 @@ Next active item: **17. Rollback Watcher**. Items 15 and 16 have the demo story 
 - [x] Show guardrails blocking unsafe manifests before deploy
 - [x] Show telemetry making runtime health visible
 - [x] Show SLO burn from a deliberately bad version
-- [ ] Show a simple watcher detecting the bad version and rolling back
+- [x] Show a simple watcher detecting the bad version and rolling back
 - [x] Keep the full story simple enough to explain in a learning session
 
 ### 16. Tiny Java Telemetry Service
@@ -166,11 +166,21 @@ Next active item: **17. Rollback Watcher**. Items 15 and 16 have the demo story 
 
 ### 17. Rollback Watcher
 
-- [ ] Add a small watcher script after deploy
-- [ ] Watch app health, rollout state, and simple metrics
-- [ ] Print clear plain-language diagnosis
-- [ ] Trigger `kubectl rollout undo` for the demo service when the burn is obvious
-- [ ] Keep the watcher small enough for teams to read
+- [x] Add a small watcher script after deploy
+- [x] Watch app health, rollout state, and simple metrics
+- [x] Print clear plain-language diagnosis
+- [x] Trigger `kubectl rollout undo` for the demo service when the burn is obvious
+- [x] Keep the watcher small enough for teams to read
+
+### 18. developer self-service platform Platform Alignment
+
+- [x] Add policy-shaped service interface examples without pretending to run full gateway locally
+- [x] Add policy checks for JWT/OAuth, quota, spike arrest, and target standards
+- [x] Add a GitOps flow for API platform config
+- [x] Add docs mapping API platform risks to platform controls
+- [x] Add a self-service focused walkthrough that explains login request flow, policy enforcement, and platform operations
+- [x] Add demo notes that map this lab to developer self-service platform practices
+- [x] Keep full gateway hybrid installation out of the local k3d demo unless there is a separate install track
 
 ## Suggested Build Order
 
@@ -185,6 +195,7 @@ Next active item: **17. Rollback Watcher**. Items 15 and 16 have the demo story 
 9. Add learning tracks after the runnable lab has enough proof to teach from.
 10. Add CI/CD basics and platform mentoring docs as team-enablement material.
 11. Add the tiny Java telemetry service and rollback watcher as the operator-grade runtime demo.
+12. Add developer self-service platform-alignment notes as an demo-specific learning layer.
 
 ## Not In MVP
 
@@ -193,3 +204,4 @@ Next active item: **17. Rollback Watcher**. Items 15 and 16 have the demo story 
 - Canary controllers before the basics work
 - More than one ingress/controller option
 - Full SRE platform on day 1
+- Full gateway hybrid runtime inside the tiny local k3d demo

@@ -1,464 +1,121 @@
-# Dashboard Demo Runbook
+# Dashboard Demo
 
-Use this when you want one guided session: terminal commands on the left, portal dashboards on the right.
+Use this after the [User Guide](README.md) golden path.
 
-The commands are split into two groups:
+Already done:
 
-- setup commands prepare the lab before the demo
-- demo commands are the things you run while presenting
+- `make demo-ready` prepared both demo apps and observability
+- `make tools-up` opened the portal and kept Grafana, Prometheus, Argo CD, and app port-forwards alive
 
-## Low-Stress Demo Path
+Goal: show that telemetry explains user health better than pod status alone.
 
-Use this path when you want the least typing during a live demo.
+## Terms To Explain First
 
-Before the demo:
+- SLI: measured signal, such as availability, latency, or error rate.
+- SLO: target for that signal.
+- Error budget: allowed gap between perfect service and the SLO.
+- Burn rate: how fast the service is spending the error budget.
+- p95 latency: 95 percent of requests were this fast or faster.
+- Noisy neighbor: one tenant or workload creates enough load, errors, or latency to hurt service quality.
 
-```sh
-make demo-ready
+Say:
+
+```text
+Kubernetes says whether the app is running. SLI and SLO panels say whether users are getting the service level we promised.
 ```
 
-This prepares both demo apps:
+## 1. Reset Demo State
 
-- `Python Demo API`: `tenant-a/demo-api` baseline
-- `Java app`: `tenant-b/java-telemetry-api` noisy neighbor
-
-Start the portal in one terminal and leave it running:
-
-```sh
-make tools-up
-```
-
-Before showing Grafana, reset to a clean good state:
+Run:
 
 ```sh
 make demo-clean
 ```
 
-Use a second terminal for demo actions:
+State after this step:
+
+- Python app in `tenant-a` is healthy baseline
+- Java app in `tenant-b` is healthy noisy-neighbor target
+- recent traffic exists so Grafana panels have data
+
+Next: prove normal traffic.
+
+## 2. Show Baseline Traffic
+
+Run:
 
 ```sh
-make demo-clean
 make traffic
-APP=java-telemetry-api TENANT=tenant-b make traffic
-APP=java-telemetry-api TENANT=tenant-b make break
-APP=java-telemetry-api TENANT=tenant-b make traffic
-APP=java-telemetry-api TENANT=tenant-b make traffic-slow
-APP=java-telemetry-api TENANT=tenant-b make deploy
 APP=java-telemetry-api TENANT=tenant-b make traffic
 ```
 
 In Grafana:
 
 1. Set time range to `Last 2 minutes`.
-2. Keep refresh at `5s` or `10s`.
+2. Set refresh to `5s` or `10s`.
 3. For baseline, set `Service=demo-api` and `Tenant=tenant-a`.
-4. For noisy neighbor, set `Service=java-telemetry-api` and `Tenant=tenant-b`.
+4. For noisy-neighbor app, set `Service=java-telemetry-api` and `Tenant=tenant-b`.
 5. Set `Demo window=30s`.
 
-In the portal:
+Expected result: request rate moves while availability and latency stay healthy.
 
-1. Under `Apps`, open `Python Demo API` for normal baseline traffic.
-2. Under `Apps`, open `Java app` before running Java error, slow, or mixed scenarios.
-3. Match Grafana `Service` and `Tenant` to the selected app.
+Next: create tenant-b errors.
 
-What should move:
+## 3. Create Error Burn
 
-- after `make traffic`: request rate moves
-- after `make demo-clean`: 5xx should be zero or fade out after one 30s window
-- after Java `make break` plus Java `make traffic`: 5xx, availability, and burn panels move for tenant B
-- after Java `make traffic-slow`: latency panels move for tenant B
-- after Java `make deploy` plus Java `make traffic`: tenant B moves back toward healthy
-- tenant A stays separate when Grafana is set to `Service=demo-api`, `Tenant=tenant-a`
+Run:
 
-If something feels stuck:
+```sh
+APP=java-telemetry-api TENANT=tenant-b make break
+APP=java-telemetry-api TENANT=tenant-b make traffic
+```
+
+Expected result:
+
+- tenant-b 5xx panels move
+- availability drops for tenant-b
+- error budget burn rises
+- tenant-a stays separate when Grafana filters are set to `Service=demo-api`, `Tenant=tenant-a`
+
+Next: create latency burn.
+
+## 4. Create Slow Requests
+
+Run:
+
+```sh
+APP=java-telemetry-api TENANT=tenant-b make traffic-slow
+```
+
+Expected result: tenant-b p95 latency rises.
+
+Next: recover with the watcher.
+
+## 5. Watcher Recovery
+
+Run:
+
+```sh
+APP=java-telemetry-api TENANT=tenant-b make rollback-watch
+APP=java-telemetry-api TENANT=tenant-b make traffic
+```
+
+Expected result:
+
+- watcher prints diagnosis
+- watcher rolls tenant-b back when burn is obvious
+- tenant-b moves back toward healthy after recovery traffic
+
+Next runbook: [Platform-as-a-Service Demo](platform-as-a-service.md).
+
+## If Something Feels Stuck
 
 - no Grafana data: check `Service`, `Tenant`, and `Demo window`
 - old 5xx still visible: run `make demo-clean`, set `Last 2 minutes`, wait 30s, then refresh
-- no Java pods: run `APP=java-telemetry-api TENANT=tenant-b make build deploy`
-- port-forward lost: stop `make tools-up` with `Ctrl-C`, then run it again
-- panels move slowly: wait one or two 5s scrape intervals and run `make traffic` again
-- bad state remains: run `make deploy` and `APP=java-telemetry-api TENANT=tenant-b make deploy`
-
-## Demo Story
-
-```text
-setup local platform
-  -> open portal
-  -> prove baseline health
-  -> create traffic
-  -> read SLI/SLO panels in Grafana
-  -> break tenant-b as the noisy neighbor
-  -> prove the same signals in Prometheus
-  -> kill one pod and watch Kubernetes recover
-  -> create Argo CD drift
-  -> sync back to Git desired state
-  -> show policy guardrail
-```
-
-## Terms To Explain First
-
-- SLI: service level indicator. The measured signal, such as availability percentage, request latency, or error percentage.
-- SLO: service level objective. The target for that signal, such as 95 percent availability or 95 percent of requests under 500ms in this local demo.
-- Error budget: the allowed gap between perfect service and the SLO. A 99 percent availability SLO gives a 1 percent error budget.
-- Burn rate: how fast the service is consuming its error budget. `2x` means the service is spending budget twice as fast as allowed.
-- p95 latency: the 95th percentile request time. If p95 is 500ms, 95 out of 100 requests were 500ms or faster, and 5 were slower.
-- Noisy neighbor: one tenant or workload creates enough load, errors, or latency to hurt itself or shared resources. In this lab, tenant B is made noisy while tenant A stays separate.
-
-Use this sentence in the demo:
-
-```text
-Kubernetes says whether the app is running. SLI and SLO panels say whether users are getting the service level we promised.
-```
-
-## Setup Commands
-
-Run setup before presenting. These commands create the platform and should not be the main demo.
-
-Fresh start:
-
-```sh
-make reset
-make demo-ready
-```
-
-Same setup, expanded:
-
-```sh
-make install
-make bootstrap
-make build
-APP=java-telemetry-api TENANT=tenant-b make build
-make install-addons
-make deploy
-APP=java-telemetry-api TENANT=tenant-b make deploy
-make validate
-make demo-clean
-make argocd
-```
-
-During `make` runs, green `$ ...` lines show the actual `kubectl`, `helm`, `node`, `docker`, or `k3d` command being executed.
-
-Expected:
-
-- cluster exists
-- Kyverno is installed
-- Prometheus and Grafana are installed
-- Argo CD is installed
-- `platform-guardrails-tenant-a` exists
-- `demo-api` is running in `tenant-a`
-- `java-telemetry-api` is running in `tenant-b`
-
-If Argo CD apps are missing:
-
-```sh
-make argocd-apps
-```
-
-## Portal Command
-
-Keep this command running in a second terminal:
-
-```sh
-make tools-up
-```
-
-Open:
-
-```text
-http://localhost:18000
-```
-
-The `User Guide` card is first. Use it as the driver, then switch to Grafana, Prometheus, Argo CD, and Traffic Lab as each step asks.
-
-## Demo Commands
-
-Run these while presenting, in this order.
-
-### 1. Baseline Evidence
-
-In terminal:
-
-```sh
-make evidence
-make argocd
-make observability
-```
-
-In portal:
-
-1. Open `User Guide`.
-2. Open `Grafana`.
-3. Open `Argo CD`.
-4. Show app health, sync status, and runtime metrics.
-
-Purpose:
-
-```text
-prove the platform is healthy before creating incidents
-```
-
-### 2. SLI/SLO Dashboard Read
-
-In portal:
-
-1. Open `Traffic Lab`.
-2. Click `Run normal traffic`.
-3. Open `Grafana`.
-4. Watch `Request Rate`.
-5. Watch `Availability SLI vs SLO`.
-6. Watch `Latency SLI vs SLO`.
-7. Watch `Latency P95`.
-
-Talk track:
-
-```text
-Request Rate proves users are hitting the service.
-Availability SLI vs SLO compares actual success percentage to the dashboard target.
-Latency SLI vs SLO compares requests under the dashboard latency threshold to the dashboard target.
-Latency P95 shows the slower edge of user experience, not just the average.
-```
-
-Expected:
-
-- request rate moves after scrape
-- availability stays near the SLO when traffic is healthy
-- latency SLI stays above the 95 percent target when requests are fast
-- p95 latency stays low during normal traffic
-
-### 3. Prometheus Proof
-
-In portal:
-
-1. Open `Prometheus`.
-2. Copy `Availability SLI vs 99 percent SLO`.
-3. Paste it into Prometheus and run it.
-4. Copy `Latency SLI under 500ms vs dashboard SLO`.
-5. Paste it into Prometheus and run it.
-
-Purpose:
-
-```text
-show that Grafana panels are not magic; they are PromQL queries over scraped metrics
-```
-
-### 4. Create SLO Burn
-
-In portal:
-
-1. Open `Traffic Lab`.
-2. Click `Create 500 errors`.
-3. Open `Grafana`.
-4. Watch `Error Rate`.
-5. Watch `Error Budget Burn`.
-6. Open `Prometheus`.
-7. Copy `Error percentage` or `Error budget burn rate`.
-8. Run the query.
-
-Expected:
-
-- error rate moves after `/fail` traffic
-- error percentage rises
-- error budget burn rises when the error percentage exceeds the 1 percent demo budget
-- Prometheus query matches the dashboard behavior
-
-Talk track:
-
-```text
-This is the moment an operator cares about. The app can still be running, but the SLO says users are being hurt.
-```
-
-### 4b. Noisy Neighbor Tenant
-
-In terminal:
-
-```sh
-APP=java-telemetry-api TENANT=tenant-b make deploy
-make traffic
-APP=java-telemetry-api TENANT=tenant-b make traffic
-APP=java-telemetry-api TENANT=tenant-b make break
-APP=java-telemetry-api TENANT=tenant-b make traffic
-APP=java-telemetry-api TENANT=tenant-b make traffic-slow
-APP=java-telemetry-api TENANT=tenant-b make deploy
-```
-
-In Grafana:
-
-1. Set `Service` to `demo-api`.
-2. Set `Tenant` to `tenant-a`.
-3. Confirm baseline panels are steady.
-4. Set `Service` to `java-telemetry-api`.
-5. Set `Tenant` to `tenant-b`.
-6. Watch 5xx percentage, availability SLI, latency SLI, and burn rate move.
-
-Expected:
-
-- tenant B burns its own SLO
-- tenant A remains a separate baseline
-- same dashboard reads both tenants because both apps emit the same metric labels
-
-Talk track:
-
-```text
-This is noisy-neighbor behavior: one tenant is unhealthy, but the platform keeps the blast radius visible and bounded.
-```
-
-### 5. Slow User Experience
-
-In portal:
-
-1. Open `Traffic Lab`.
-2. Click `Create slow requests`.
-3. Open `Grafana`.
-4. Watch `Latency P95`.
-5. Watch `Latency SLI vs SLO`.
-
-Expected:
-
-- p95 latency rises after `/slow` traffic
-- latency SLI drops when fewer requests finish under the dashboard latency threshold
-- error rate can stay flat, proving latency and errors are different user-impact signals
-
-### 6. Basic Traffic And Metrics
-
-In portal:
-
-1. Open `Traffic Lab`.
-2. Click `Run normal traffic`.
-3. Open `Grafana`.
-4. Watch `Request Rate`.
-5. Open `Prometheus`.
-6. Copy the `Request rate` PromQL sample.
-7. Paste it into Prometheus and run it.
-
-Then create an incident:
-
-1. Open `Traffic Lab`.
-2. Click `Create 500 errors`.
-3. Open `Grafana`.
-4. Watch `Error Rate`.
-5. Open `Prometheus`.
-6. Copy `5xx error rate` or `Error percentage`.
-7. Run the query.
-
-Expected:
-
-- request rate moves after scrape
-- error rate moves after `/fail` traffic
-- Prometheus query matches the dashboard behavior
-
-If panels do not move immediately, wait one or two Prometheus scrape intervals and refresh the panel.
-
-### 7. Pod Resilience
-
-This is a resilience demo, not a rollback demo. It shows Kubernetes maintaining desired replicas after a single pod disappears.
-
-Setup in portal:
-
-1. Open `Traffic Lab`.
-2. Click `Run normal traffic`.
-3. Open `Grafana`.
-4. Watch `Request Rate` and `Availability SLI vs SLO`.
-
-In terminal:
-
-```sh
-make resilience
-```
-
-Expected:
-
-- one `demo-api` pod is deleted
-- Deployment creates a replacement pod
-- `kubectl rollout status` returns healthy
-- request rate should continue if traffic is active
-- availability may dip briefly if requests hit the deleted pod during replacement
-
-Talk track:
-
-```text
-The team did not manually restart the app.
-The Deployment declared two replicas.
-Kubernetes noticed one pod disappeared and created a replacement.
-Telemetry tells us whether users noticed during recovery.
-```
-
-What this proves:
-
-- resilience: the platform restores desired state
-- availability: traffic can continue through another replica
-- observability: Grafana shows whether the self-heal protected users
-
-What it does not prove:
-
-- no downtime under every failure
-- database or dependency resilience
-- bad release rollback
-
-### 8. GitOps Drift And Recovery
-
-In terminal:
-
-```sh
-make argocd-drift
-make argocd
-kubectl get deployment demo-api -n tenant-a
-```
-
-Expected:
-
-- deployment shows `1/1`
-- Argo CD tenant app becomes `OutOfSync`
-
-In portal:
-
-1. Open `Argo CD`.
-2. Open `platform-guardrails-tenant-a`.
-3. Show `OutOfSync`.
-4. Explain that live cluster state no longer matches Git.
-
-Recover from Git:
-
-```sh
-make argocd-sync
-kubectl get deployment demo-api -n tenant-a
-make argocd
-```
-
-Expected:
-
-- deployment returns to `2/2`
-- `platform-guardrails-tenant-a` returns to `Synced` and `Healthy`
-
-Talk track:
-
-```text
-Manual kubectl change caused drift.
-Argo CD compared live state to Git.
-Sync restored approved desired state.
-```
-
-### 9. Policy Guardrail
-
-In terminal:
-
-```sh
-make validate-policies
-make validate
-```
-
-Expected:
-
-- valid examples pass
-- bad example is rejected
-- unsafe image/resources/security context are blocked
-
-Talk track:
-
-```text
-GitOps handles delivery.
-Policy decides what is allowed.
-Telemetry shows what is running.
-```
+- no Java pods: rebuild and redeploy from the User Guide recovery section
+- port-forward lost: run `make tools-up` from the User Guide recovery section
+- panels move slowly: wait one or two 5s scrape intervals and run traffic again
+- watcher only diagnoses: check whether `ROLLBACK_WATCHER_MODE=diagnose` is set
 
 ## User Guide Controls
 
@@ -472,31 +129,3 @@ Use:
 - `Done`: mark page complete in browser local storage
 
 Keep terminal visible beside the browser.
-
-## Clean Stop
-
-Stop portal and port-forwards:
-
-```text
-Ctrl-C in Terminal 2
-```
-
-Optional full reset:
-
-```sh
-make reset
-```
-## Dashboard Controls
-
-At the top of the Grafana dashboard, use the variables as demo controls:
-
-- `Availability SLO %`: default 95 for demo visibility.
-- `Latency SLO %`: default 95.
-- `Latency threshold seconds`: default 0.5 because it matches a real histogram bucket.
-- `Error budget %`: default 5 so local 500 traffic visibly burns budget.
-- `Burn threshold`: default 2.
-- `Demo window`: default 30s. This is short for live demos; real SLOs use longer windows.
-
-These controls change the target lines and comparisons. They do not change traffic or the service.
-
-Prometheus scrapes the demo API every 5s. After clicking a Traffic Lab button, wait one or two dashboard refreshes.

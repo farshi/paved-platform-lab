@@ -38,19 +38,19 @@ const trafficTargets = [
 ];
 const guideFiles = [
   {
-    title: "Start Here",
+    title: "User Guide",
     path: "docs/runbooks/README.md",
-    description: "Choose the right guided session.",
-  },
-  {
-    title: "Dashboard Demo",
-    path: "docs/runbooks/dashboard-demo.md",
-    description: "Drive terminal commands and dashboards together.",
+    description: "Follow the golden path in order.",
   },
   {
     title: "Core Lab",
     path: "docs/runbooks/core-lab.md",
     description: "Run the main platform guardrails path.",
+  },
+  {
+    title: "Dashboard Demo",
+    path: "docs/runbooks/dashboard-demo.md",
+    description: "Drive terminal commands and dashboards together.",
   },
   {
     title: "Platform-as-a-Service",
@@ -61,6 +61,11 @@ const guideFiles = [
     title: "Platform Practices",
     path: "docs/runbooks/platform-practices.md",
     description: "Map the platform model to API gateway and policy-shaped work.",
+  },
+  {
+    title: "developer self-service platform",
+    path: "docs/runbooks/developer-self-service-platform.md",
+    description: "Map customer identity tokens, platform policy, and platform operations.",
   },
   {
     title: "API Platform Controls",

@@ -37,6 +37,10 @@ spec:
               value: "0"
             - name: DEFAULT_SLOW_SECONDS
               value: "0.25"
+            - name: identity_ISSUER
+              value: https://identity.example.com/oauth2/default
+            - name: identity_AUDIENCE
+              value: orders-api
             - name: OTEL_SERVICE_NAME
               value: demo-api
             - name: OTEL_EXPORTER_OTLP_ENDPOINT

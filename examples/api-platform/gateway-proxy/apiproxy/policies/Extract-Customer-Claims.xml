@@ -1,0 +1,15 @@
+<AssignMessage name="Extract-Customer-Claims">
+  <AssignVariable>
+    <Name>identity.customer_id</Name>
+    <Ref>jwt.Verify-JWT.claim.customer_id</Ref>
+  </AssignVariable>
+  <AssignVariable>
+    <Name>identity.client_id</Name>
+    <Ref>jwt.Verify-JWT.claim.client_id</Ref>
+  </AssignVariable>
+  <AssignVariable>
+    <Name>identity.scope</Name>
+    <Ref>jwt.Verify-JWT.claim.scope</Ref>
+  </AssignVariable>
+  <IgnoreUnresolvedVariables>false</IgnoreUnresolvedVariables>
+</AssignMessage>

@@ -1,71 +1,117 @@
-# Runbooks
+# User Guide
 
-Platform Guardrails Lab is a local teaching environment for platform engineering. It shows how a team can move from service code to a safe Kubernetes deployment, then use guardrails, GitOps, telemetry, SLI/SLO dashboards, and rollback workflows to operate the app.
+Platform Guardrails Lab is a local teaching environment for platform engineering. It shows one progressive path: prepare the lab, open the portal, prove the core platform controls, then map the same controls to API gateway, identity, and policy-shaped work.
 
-The demo uses two small apps:
+This page is the only place that owns setup order. Other runbooks assume you already followed the steps here and only list commands needed for their specific demo.
 
-- `Python Demo API`: Flask baseline app in `tenant-a`
-- `Java app`: Java + SQLite telemetry app in `tenant-b`
+## Golden Path
 
-The point is not to build a production platform. The point is to make the platform path visible: build an app, deploy it, block unsafe changes, create traffic, read Grafana, see SLO burn, and recover.
+### 0. Check Workstation
 
-## Before You Continue
+You need:
 
-Set up these workstation tools first:
+- Docker Desktop, or another Docker-compatible runtime, already running
+- Homebrew on macOS if local tools are missing
+- `make`
+- a normal local checkout of this repo
 
-- Docker Desktop, or another Docker-compatible runtime, must be running.
-- Homebrew should be available on macOS so the installer can add missing tools.
-- `make` must be available from your terminal.
-- A normal Git checkout of this repo must be available locally.
-
-Then run:
+Run once:
 
 ```sh
 make install
 ```
 
-This checks or installs local command-line tools:
+State after this step:
 
-- `kubectl`: talks to Kubernetes
-- `k3d`: creates a local Kubernetes cluster inside Docker
-- `helm`: installs in-cluster add-ons
-- `argocd`: talks to Argo CD after Argo CD is installed
+- `kubectl`, `k3d`, `helm`, and `argocd` are available or checked
+- no local lab cluster is required yet
 
-After local tools are ready, run:
+Next: prepare the full demo.
+
+### 1. Prepare The Lab
+
+Run:
 
 ```sh
 make demo-ready
 ```
 
-This prepares the full local demo:
+State after this step:
 
-- creates the local `k3d` Kubernetes cluster
-- builds and imports the Python and Java app images
-- installs Kyverno policy guardrails
-- installs Prometheus, Grafana, and the OpenTelemetry collector
-- installs Argo CD and registers the lab applications
-- deploys Python in `tenant-a` and Java in `tenant-b`
-- validates the good and bad manifests
+- local `guardrails-lab` k3d cluster exists
+- Python app is deployed in `tenant-a`
+- Java app is deployed in `tenant-b`
+- Kyverno, observability, and Argo CD are installed
+- API platform examples are registered for GitOps flow
+- good and bad manifest checks have run
 
-For the live browser guide, run:
+Next: open the browser guide and keep local ports alive.
+
+### 2. Open The Portal
+
+Run in a long-running terminal:
 
 ```sh
 make tools-up
 ```
 
-This opens the local portal and keeps port-forwards alive for Grafana, Prometheus, Argo CD, and app views.
+State after this step:
 
-Start here:
+- portal runs at `http://localhost:18000`
+- Grafana, Prometheus, Argo CD, and demo app port-forwards stay alive
+- if `curl http://localhost:18000` fails, run `make tools-up` first
 
-1. ([dashboard-demo.md](dashboard-demo.md)) - terminal-plus-dashboard demo driver
-2. ([core-lab.md](core-lab.md)) - short command flow and evidence checks
-3. ([platform-as-a-service.md](platform-as-a-service.md)) - end-to-end paved-road story
-4. ([platform-practices.md](platform-practices.md)) - API gateway and policy-shaped platform flow
+Keep this terminal open while using dashboard or portal-based steps.
 
-API platform risk map: ([../api-platform-controls.md](../api-platform-controls.md))
+Next: follow the runbooks below in order.
 
-SLI, SLO, p95 latency, error budget, burn rate definitions, and the low-stress noisy-neighbor demo path live in ([dashboard-demo.md](dashboard-demo.md)). Start there before showing Grafana panels.
+## Ordered Runbooks
 
-Learning tracks for team mentoring live in ([../learning/README.md](../learning/README.md)).
+1. [Core Lab](core-lab.md)
+   Prove the basic platform path: deployed app, policy rejection, rollback, evidence.
 
-These are written for live learning sessions. They also work as a personal rehearsal path when explaining the project.
+2. [Dashboard Demo](dashboard-demo.md)
+   Use the portal, traffic controls, Prometheus, and Grafana to show runtime health.
+
+3. [Platform-as-a-Service Demo](platform-as-a-service.md)
+   Explain the paved-road platform story from developer change to recovery.
+
+4. [Platform Practices](platform-practices.md)
+   Map the same platform controls to service interface governance and policy-shaped work.
+
+5. [developer self-service platform](developer-self-service-platform.md)
+   Show developer request flow, platform policy enforcement, and DevOps engineer mapping.
+
+6. [API Platform Controls](../api-platform-controls.md)
+   Use as the risk map when explaining why each API gateway control exists.
+
+7. [Learning Tracks](../learning/README.md)
+   Use for mentoring material after the demo path is clear.
+
+## Recovery
+
+Portal or local endpoints down:
+
+```sh
+make tools-up
+```
+
+Stale app image or missing new endpoint:
+
+```sh
+make build APP=demo-api TENANT=tenant-a
+make deploy APP=demo-api TENANT=tenant-a
+make tools-up
+```
+
+Stop running local instances but keep images:
+
+```sh
+make stop
+```
+
+Delete local lab resources but keep images:
+
+```sh
+make tear-down
+```

@@ -1,6 +1,8 @@
 import os
 import random
 import time
+import base64
+import json
 from flask import Flask, jsonify, request, Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
@@ -18,6 +20,8 @@ TENANT = os.getenv("TENANT", "shared")
 OTEL_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "").strip()
 ERROR_RATE_PERCENT = max(0.0, min(float(os.getenv("ERROR_RATE_PERCENT", "0")), 100.0))
 DEFAULT_SLOW_SECONDS = max(0.0, min(float(os.getenv("DEFAULT_SLOW_SECONDS", "0.25")), 5.0))
+identity_ISSUER = os.getenv("identity_ISSUER", "https://identity.example.com/oauth2/default")
+identity_AUDIENCE = os.getenv("identity_AUDIENCE", "orders-api")
 
 
 REQUESTS = Counter(
@@ -30,6 +34,50 @@ LATENCY = Histogram(
     "HTTP request latency in seconds",
     ["service", "tenant", "method", "path"],
 )
+
+
+def decode_demo_jwt_payload(token: str) -> dict:
+    parts = token.split(".")
+    if len(parts) != 3:
+        raise ValueError("token must have JWT header.payload.signature shape")
+    payload = parts[1] + "=" * (-len(parts[1]) % 4)
+    return json.loads(base64.urlsafe_b64decode(payload.encode("utf-8")))
+
+
+def require_customer_token() -> tuple[dict | None, tuple | None]:
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        return None, (jsonify({"status": "denied", "reason": "missing bearer token"}), 401)
+    try:
+        claims = decode_demo_jwt_payload(header.removeprefix("Bearer ").strip())
+    except (ValueError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        return None, (jsonify({"status": "denied", "reason": str(error)}), 401)
+
+    now = int(time.time())
+    expected = {
+        "iss": identity_ISSUER,
+        "aud": identity_AUDIENCE,
+    }
+    for key, value in expected.items():
+        if claims.get(key) != value:
+            return None, (
+                jsonify(
+                    {
+                        "status": "denied",
+                        "reason": f"invalid {key}",
+                        "expected": value,
+                    }
+                ),
+                403,
+            )
+    if int(claims.get("exp", 0)) <= now:
+        return None, (jsonify({"status": "denied", "reason": "token expired"}), 401)
+    if not claims.get("customer_id") or not claims.get("client_id"):
+        return None, (
+            jsonify({"status": "denied", "reason": "missing customer_id or client_id claim"}),
+            403,
+        )
+    return claims, None
 
 
 def configure_tracing() -> None:
@@ -120,6 +168,30 @@ def slow():
 @app.get("/fail")
 def fail():
     return jsonify({"status": "error", "message": "intentional demo failure"}), 500
+
+
+@app.get("/customer/orders")
+def customer_orders():
+    claims, error = require_customer_token()
+    if error:
+        return error
+    return jsonify(
+        {
+            "status": "ok",
+            "service": SERVICE_NAME,
+            "tenant": TENANT,
+            "auth_model": "local identity demo token; platform policy is the real gateway boundary",
+            "customer": {
+                "id": claims["customer_id"],
+                "client_id": claims["client_id"],
+                "scope": claims.get("scope", "orders:read"),
+            },
+            "orders": [
+                {"id": "ord-1001", "state": "processing"},
+                {"id": "ord-1002", "state": "shipped"},
+            ],
+        }
+    )
 
 
 @app.get("/metrics")

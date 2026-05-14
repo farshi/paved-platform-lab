@@ -36,7 +36,7 @@ Keep one teaching spine:
 
 ## Next Work
 
-Next active ticket: **Q9 - Simple Rollback Watcher**.
+Next active ticket: **none for the current MVP**. The demo spine, learning tracks, Java telemetry app, rollback watcher, Argo CD loop, API platform lens, and developer self-service practice mapping are complete enough for demo use.
 
 ### Q0 - Platform-as-a-Service Demo Story
 
@@ -162,11 +162,11 @@ Done when: the lab can create visible SLO burn from a tiny service.
 
 Goal: show automated detection and rollback without building a big platform.
 
-- [ ] Add a small watcher script.
-- [ ] Watch app health, rollout state, and simple metrics.
-- [ ] Print what is wrong in plain language.
-- [ ] Trigger `kubectl rollout undo` when the demo service is unhealthy.
-- [ ] Keep manual override obvious.
+- [x] Add a small watcher script.
+- [x] Watch app health, rollout state, and simple metrics.
+- [x] Print what is wrong in plain language.
+- [x] Trigger `kubectl rollout undo` when the demo service is unhealthy.
+- [x] Keep manual override obvious.
 
 Done when: the watcher detects the broken deploy and rolls back cleanly.
 
@@ -199,4 +199,4 @@ Done when: the lab can explain how Kubernetes guardrails, GitOps, and observabil
 ## Deferred
 
 - Gateway layer.
-- PatchPilot MVP decision.
+- PatchPilot phase-2 decision.

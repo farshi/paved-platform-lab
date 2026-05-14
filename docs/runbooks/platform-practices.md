@@ -2,6 +2,15 @@
 
 Use this as a 30-minute walkthrough for building and operating a small platform-as-a-service path.
 
+Start after the [User Guide](README.md) golden path.
+
+Already done:
+
+- `make demo-ready` prepared Kubernetes, Kyverno, observability, Argo CD, and demo apps
+- `make tools-up` opened the portal if you need Grafana, Prometheus, Argo CD, or app views
+
+This page only lists API platform-specific commands. Use the User Guide for setup and local endpoint recovery.
+
 ## Positioning
 
 Start simple:
@@ -26,14 +35,7 @@ Say:
 
 ### 3-7 minutes: Show the simple platform shape
 
-Run or describe:
-
-```sh
-make bootstrap
-make build
-make install-kyverno
-make deploy
-```
+Describe the state created by `make demo-ready`.
 
 Explain the layers:
 
@@ -87,13 +89,7 @@ Say:
 
 ### 12-18 minutes: Show observability and noisy neighbors
 
-Run:
-
-```sh
-make install-observability
-make observability
-make tools-up
-```
+Use the portal opened by `make tools-up` from the User Guide.
 
 Open:
 
@@ -203,19 +199,20 @@ This is policy-shaped without pretending to run full gateway locally.
 Run:
 
 ```sh
-make validate-api-platform
-node scripts/argocd/render-apps.js
+make validate-self-service-platform
 ```
 
 What to show:
 
-- local config validation catches missing API platform controls
+- local config validation catches missing API platform and identity controls
 - Argo CD can manage the Kubernetes representation of approved API platform config
 - the actual gateway runtime boundary stays explicit
 
 Risk mapping:
 
 - `docs/api-platform-controls.md`
+
+Next runbook: [developer self-service platform](developer-self-service-platform.md).
 
 ### 27-30 minutes: Close with leadership angle
 

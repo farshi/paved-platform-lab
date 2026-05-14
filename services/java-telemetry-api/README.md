@@ -33,7 +33,13 @@ APP=java-telemetry-api TENANT=tenant-b make deploy
 APP=java-telemetry-api TENANT=tenant-b make traffic
 APP=java-telemetry-api TENANT=tenant-b make break
 APP=java-telemetry-api TENANT=tenant-b make traffic
-APP=java-telemetry-api TENANT=tenant-b make rollback
+APP=java-telemetry-api TENANT=tenant-b make rollback-watch
 ```
 
 Open Grafana and set `Service` to `java-telemetry-api` and `Tenant` to `tenant-b`. Good traffic should keep availability high. Bad traffic should create visible error-budget burn within the 30s demo window.
+
+Use diagnose-only mode when you want to explain the watcher without changing the cluster:
+
+```sh
+ROLLBACK_WATCHER_MODE=diagnose APP=java-telemetry-api TENANT=tenant-b make rollback-watch
+```

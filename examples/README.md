@@ -12,6 +12,7 @@ Run:
 
 ```sh
 make validate-api-platform
+make validate-self-service-platform
 ```
 
 ## How To Apply A Tenant

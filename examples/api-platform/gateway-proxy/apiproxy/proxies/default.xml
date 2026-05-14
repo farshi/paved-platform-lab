@@ -8,6 +8,12 @@
         <Name>OAuthV2-Verify-Access-Token</Name>
       </Step>
       <Step>
+        <Name>Extract-Customer-Claims</Name>
+      </Step>
+      <Step>
+        <Name>Assign-identity-Headers</Name>
+      </Step>
+      <Step>
         <Name>Quota-Per-Client</Name>
       </Step>
       <Step>

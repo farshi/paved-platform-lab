@@ -1,0 +1,10 @@
+<AssignMessage name="Assign-identity-Headers">
+  <Set>
+    <Headers>
+      <Header name="X-Customer-ID">{identity.customer_id}</Header>
+      <Header name="X-Client-ID">{identity.client_id}</Header>
+      <Header name="X-identity-Scope">{identity.scope}</Header>
+    </Headers>
+  </Set>
+  <AssignTo createNew="false" transport="http" type="request"/>
+</AssignMessage>

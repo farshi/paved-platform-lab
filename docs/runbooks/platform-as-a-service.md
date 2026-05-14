@@ -42,40 +42,45 @@ Where to show them:
 
 ## Demo Steps
 
-### 1. Install Tools
+Start after the [User Guide](README.md) golden path.
+
+Already done:
+
+- local tools are installed
+- `make demo-ready` prepared the cluster and apps
+- `make tools-up` opened the portal if browser views are needed
+
+This page does not repeat setup commands. It only runs the commands needed to tell the platform-as-a-service story.
+
+### 1. Prove The Good Path
 
 Run:
 
 ```sh
-make install
+make evidence
 ```
 
-What this teaches: teams should not need tribal knowledge to set up the platform tools.
+What this teaches: the platform has an inspectable baseline. You can see deployed app state, policy proof, rollout history, and health.
 
-### 2. Start Local Platform
+State after this step: known-good platform state is visible.
 
-Run:
+Next: show what happens when a team makes an unsafe change.
 
-```sh
-make bootstrap
-```
-
-What this teaches: a local cluster lets teams learn the deployment path before touching shared environments.
-
-### 3. Deploy Good Service
+### 2. Block Unsafe Config
 
 Run:
 
 ```sh
-make build
-make install-kyverno
 make validate
-make deploy
 ```
 
-What this teaches: the safe path is automated. Teams should learn one repeatable route, not a pile of manual commands.
+What this teaches: guardrails should reject unsafe manifests before runtime.
 
-### 4. Break Something Safely
+State after this step: the safe path and blocked path are both proven.
+
+Next: break runtime, because Kubernetes manifest safety is not the same as user health.
+
+### 3. Break Runtime Safely
 
 Run:
 
@@ -83,42 +88,48 @@ Run:
 make break
 ```
 
-What this teaches: guardrails should block unsafe changes before they become production incidents.
+What this teaches: a workload can be deployed and still hurt users. Runtime telemetry matters.
 
-### 5. Roll Back
+State after this step: the demo app is deliberately unhealthy.
+
+Next: recover.
+
+### 4. Roll Back
 
 Run:
 
 ```sh
 make rollback
+make evidence
 ```
 
-What this teaches: deployment is not complete unless rollback is practiced.
+What this teaches: deployment is not complete unless rollback is practiced and evidence proves recovery.
 
-### 6. Show SLO Health
+State after this step: known-good runtime is restored.
 
-Run:
+Next: use the portal to show SLO health.
 
-```sh
-make install-observability
-make observability
-make tools-up
-```
+### 5. Show SLO Health
+
+Use the portal opened by `make tools-up` from the User Guide.
 
 In the portal:
 
-1. Open `User Guide`.
-2. Open `Traffic Lab` and run normal traffic.
-3. Open `Grafana` and show `Availability SLI vs SLO`.
-4. Open `Grafana` and show `Latency SLI vs SLO`.
-5. Open `Traffic Lab` and create 500 errors.
-6. Open `Grafana` and show `Error Budget Burn`.
-7. Open `Traffic Lab` and create slow requests.
-8. Open `Grafana` and show `Latency P95`.
+1. Open `Traffic Lab` and run normal traffic.
+2. Open `Grafana` and show `Availability SLI vs SLO`.
+3. Open `Grafana` and show `Latency SLI vs SLO`.
+4. Open `Traffic Lab` and create 500 errors.
+5. Open `Grafana` and show `Error Budget Burn`.
+6. Open `Traffic Lab` and create slow requests.
+7. Open `Grafana` and show `Latency P95`.
 
-What this teaches: the platform is not only deploy automation. It also gives teams a shared way to decide whether users are healthy after release.
+What this teaches: the platform gives teams a shared way to decide whether users are healthy after release.
 
-### 7. Show Pod Resilience
+State after this step: runtime health is visible.
+
+Next: show Kubernetes self-healing.
+
+### 6. Show Pod Resilience
 
 Run normal traffic from Traffic Lab, then run:
 
@@ -127,6 +138,10 @@ make resilience
 ```
 
 What this teaches: Kubernetes self-heals a missing pod back to the Deployment's desired replica count. Grafana shows whether request rate and availability stayed healthy while recovery happened.
+
+State after this step: self-healing and user health have both been discussed.
+
+Next runbook: [Platform Practices](platform-practices.md).
 
 ## Next Runtime Demo
 

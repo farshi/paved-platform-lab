@@ -40,7 +40,7 @@ else
 $(error Unsupported APP "$(APP)". Use APP=demo-api or APP=java-telemetry-api)
 endif
 
-.PHONY: help setup demo-ready demo-clean install install-tools install-addons bootstrap reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-drift argocd-sync argocd-up argocd-password validate validate-policies validate-api-platform deploy break rollback traffic traffic-slow resilience check-app evidence observability tools-up
+.PHONY: help setup demo-ready demo-clean install install-tools install-addons bootstrap stop tear-down reset build scaffold install-kyverno install-observability install-argocd argocd-apps argocd argocd-drift argocd-sync argocd-up argocd-password validate validate-policies validate-api-platform validate-self-service-platform developer-flow-demo deploy break rollback rollback-watch traffic traffic-slow resilience check-app evidence observability tools-up
 
 help:
 	@echo "Setup targets:"
@@ -51,6 +51,8 @@ help:
 	@echo "  make install-tools  Install/check local command-line tools"
 	@echo "  make install-addons Install Kyverno, observability, Argo CD, and Argo apps"
 	@echo "  make bootstrap      Create local k3d cluster"
+	@echo "  make stop           Stop portal, port-forwards, and local k3d cluster"
+	@echo "  make tear-down      Stop and delete local lab resources; keep Docker images"
 	@echo "  make reset          Delete local k3d cluster"
 	@echo "  make build          Build and import selected app image"
 	@echo "  make deploy         Deploy selected app good version"
@@ -59,6 +61,7 @@ help:
 	@echo "  APP=demo-api|java-telemetry-api selects the app for build/deploy/break/rollback/traffic"
 	@echo "  TENANT=tenant-a|tenant-b selects the namespace; defaults are demo-api=tenant-a, java-telemetry-api=tenant-b"
 	@echo "  make tools-up       Open portal and port-forward Grafana, Prometheus, Argo CD, and demo API"
+	@echo "                      If curl http://localhost:18000 fails, run this first"
 	@echo "  make evidence       Print compact demo evidence"
 	@echo "  make observability  Inspect observability stack and metrics"
 	@echo "  make argocd         Inspect Argo CD applications"
@@ -67,9 +70,12 @@ help:
 	@echo "  make validate       Validate tenant manifests and bad manifest rejection"
 	@echo "  make validate-policies Validate focused policy pass/fail examples"
 	@echo "  make validate-api-platform Validate policy-shaped API platform example"
+	@echo "  make validate-self-service-platform Validate identity claims, headers, and platform policy shape"
+	@echo "  make developer-flow-demo      Show local identity request flow against the customer API"
 	@echo "  make check-app      Check demo API health from inside the cluster"
 	@echo "  make break          Apply selected app bad change"
 	@echo "  make rollback       Roll back selected app workload"
+	@echo "  make rollback-watch Diagnose selected app and auto rollback when SLO burn is obvious"
 	@echo "  make traffic        Generate selected app SLO traffic"
 	@echo "  make traffic-slow   Generate selected app slow-path traffic"
 	@echo "  make resilience     Delete one demo API pod and watch Kubernetes self-heal"
@@ -136,12 +142,47 @@ bootstrap:
 	$(SHOW) 'kubectl apply -f observability/namespace.yaml'
 	@kubectl apply -f observability/namespace.yaml
 
+stop:
+	$(SHOW) 'stop portal and kubectl port-forward processes'
+	@pkill -f "node scripts/observability/tool-portal.js" 2>/dev/null || true
+	@pkill -f "kubectl .*port-forward .*kube-prometheus-stack-grafana" 2>/dev/null || true
+	@pkill -f "kubectl .*port-forward .*kube-prometheus-stack-prometheus" 2>/dev/null || true
+	@pkill -f "kubectl .*port-forward .*argocd-server" 2>/dev/null || true
+	@pkill -f "kubectl .*port-forward .*svc/demo-api" 2>/dev/null || true
+	$(SHOW) 'if cluster exists: k3d cluster stop $(CLUSTER_NAME)'
+	@if k3d cluster list --no-headers | awk '{print $$1}' | grep -qx "$(CLUSTER_NAME)"; then \
+		k3d cluster stop $(CLUSTER_NAME) || true; \
+	else \
+		echo "cluster $(CLUSTER_NAME): not listed by k3d"; \
+	fi
+	$(SHOW) 'stop remaining k3d Docker containers for $(CLUSTER_NAME)'
+	@containers=$$(docker ps -q --filter "name=^/k3d-$(CLUSTER_NAME)-" 2>/dev/null || true); \
+	if [ -n "$$containers" ]; then \
+		docker stop $$containers; \
+	else \
+		echo "k3d Docker containers for $(CLUSTER_NAME): already stopped"; \
+	fi
+
+tear-down:
+	$(SHOW) 'make stop'
+	@$(MAKE) stop
+	$(SHOW) 'make reset'
+	@$(MAKE) reset
+	@echo "docker images: kept"
+
 reset:
 	$(SHOW) 'if cluster exists: k3d cluster delete $(CLUSTER_NAME)'
 	@if k3d cluster list --no-headers | awk '{print $$1}' | grep -qx "$(CLUSTER_NAME)"; then \
-		k3d cluster delete $(CLUSTER_NAME); \
+		k3d cluster delete $(CLUSTER_NAME) || true; \
 	else \
-		echo "cluster $(CLUSTER_NAME): already absent"; \
+		echo "cluster $(CLUSTER_NAME): not listed by k3d"; \
+	fi
+	$(SHOW) 'remove remaining k3d Docker containers for $(CLUSTER_NAME); keep images'
+	@containers=$$(docker ps -aq --filter "name=^/k3d-$(CLUSTER_NAME)-" 2>/dev/null || true); \
+	if [ -n "$$containers" ]; then \
+		docker rm -f $$containers; \
+	else \
+		echo "k3d Docker containers for $(CLUSTER_NAME): already absent"; \
 	fi
 
 build:
@@ -238,6 +279,12 @@ validate-api-platform:
 	$(SHOW) 'node scripts/validate-api-platform-examples.js'
 	@node scripts/validate-api-platform-examples.js
 
+validate-self-service-platform: validate-api-platform
+
+developer-flow-demo:
+	$(SHOW) 'node scripts/developer-flow-demo.js'
+	@node scripts/developer-flow-demo.js
+
 deploy:
 	$(SHOW) 'APP=$(APP) kubectl apply -k $(APP_DEPLOY_KUSTOMIZE)'
 	@kubectl apply -k $(APP_DEPLOY_KUSTOMIZE)
@@ -260,6 +307,10 @@ rollback:
 	@kubectl rollout undo deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE)
 	$(SHOW) 'APP=$(APP) kubectl rollout status deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) --timeout=120s'
 	@kubectl rollout status deployment/$(APP_DEPLOYMENT) -n $(APP_NAMESPACE) --timeout=120s
+
+rollback-watch:
+	$(SHOW) 'APP=$(APP) node scripts/rollback-watcher.js'
+	@APP="$(APP)" APP_NAMESPACE="$(APP_NAMESPACE)" APP_SERVICE="$(APP_DEPLOYMENT)" APP_DEPLOYMENT="$(APP_DEPLOYMENT)" node scripts/rollback-watcher.js
 
 traffic:
 	$(SHOW) 'APP=$(APP) node scripts/app-traffic.js'

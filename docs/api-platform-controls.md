@@ -9,6 +9,8 @@ It does not install gateway locally. It models the controls around an API manage
 | API platform risk | Local lab control | Demo proof |
 | --- | --- | --- |
 | unauthenticated traffic reaches sensitive API | `Verify-JWT.xml` and `OAuthV2-Verify-Access-Token.xml` | `make validate-api-platform` |
+| customer token has wrong issuer or audience | `Verify-JWT.xml` issuer and audience checks | `make validate-self-service-platform` |
+| backend cannot identify governed customer context | `Extract-Customer-Claims.xml` and `Assign-identity-Headers.xml` | validator checks customer and client headers |
 | one client consumes shared capacity | `Quota-Per-Client.xml` and `Spike-Arrest.xml` | validator checks quota and spike arrest exist |
 | proxy routes to unsafe backend | `targets/default.xml` requires HTTPS target | validator checks target URL |
 | config drift changes live behavior | `platform-guardrails-api-platform` Argo CD app | `make argocd` after push |
@@ -35,6 +37,8 @@ Real gateway:
 
 ```sh
 make validate-api-platform
+make validate-self-service-platform
+make developer-flow-demo
 node scripts/argocd/render-apps.js
 make argocd-apps
 make argocd

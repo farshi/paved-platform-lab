@@ -2,7 +2,7 @@
   <Algorithm>RS256</Algorithm>
   <Source>request.header.Authorization</Source>
   <Audience>orders-api</Audience>
-  <Issuer>https://issuer.example.com</Issuer>
+  <Issuer>https://identity.example.com/oauth2/default</Issuer>
   <PublicKey>
     <JWKS ref="public.jwks"/>
   </PublicKey>
